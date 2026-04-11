@@ -10,37 +10,8 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\LibraryController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StorefrontController;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Session\Middleware\StartSession;
-use Illuminate\View\Middleware\ShareErrorsFromSession;
-
-/**
- * Local-only: migrate, storage link, seed. Remove or protect before production.
- *
- * Session middleware is disabled so the DB `sessions` table is not queried
- * before migrations create it (SESSION_DRIVER=database).
- */
-Route::get('/setup/install', function () {
-    abort_unless(app()->environment('local'), 404);
-
-    $steps = [];
-
-    Artisan::call('migrate', ['--force' => true]);
-    $steps['migrate'] = trim(Artisan::output()) ?: 'OK';
-
-    Artisan::call('storage:link', ['--force' => true]);
-    $steps['storage:link'] = trim(Artisan::output()) ?: 'OK';
-
-    Artisan::call('db:seed', ['--force' => true]);
-    $steps['db:seed'] = trim(Artisan::output()) ?: 'OK';
-
-    return response()->json([
-        'ok' => true,
-        'steps' => $steps,
-    ], 200, [], JSON_PRETTY_PRINT);
-})->withoutMiddleware([StartSession::class, ShareErrorsFromSession::class])->name('setup.install');
 
 Route::get('/', function () {
     return redirect()->route('home');

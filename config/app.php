@@ -99,6 +99,12 @@ return [
 
     'key' => env('APP_KEY'),
 
+    /*
+    | Optional secret for GET /setup/install on non-local (use ?key=...).
+    | Leave empty to allow only when APP_ENV=local.
+    */
+    'setup_secret' => env('SETUP_SECRET'),
+
     'previous_keys' => [
         ...array_filter(
             explode(',', (string) env('APP_PREVIOUS_KEYS', ''))
