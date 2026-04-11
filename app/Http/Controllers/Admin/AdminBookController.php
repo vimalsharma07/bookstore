@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Book;
 use App\Models\Category;
+use App\Support\PublicFileUpload;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class AdminBookController extends Controller
 {
@@ -51,16 +51,13 @@ class AdminBookController extends Controller
         ]);
 
         if ($request->file('cover')) {
-            $coverPath = $request->file('cover')->store('covers', 'public');
-            $book->cover_path = $coverPath;
+            $book->cover_path = PublicFileUpload::move($request->file('cover'), 'covers');
         }
 
-        $pdfPath = $request->file('pdf')->store('books', 'local');
-        $book->pdf_path = $pdfPath;
+        $book->pdf_path = PublicFileUpload::move($request->file('pdf'), 'books');
 
         if ($request->file('preview_pdf')) {
-            $previewPath = $request->file('preview_pdf')->store('previews', 'public');
-            $book->preview_pdf_path = $previewPath;
+            $book->preview_pdf_path = PublicFileUpload::move($request->file('preview_pdf'), 'previews');
         }
 
         $book->save();
@@ -105,22 +102,18 @@ class AdminBookController extends Controller
         ]);
 
         if ($request->file('cover')) {
-            if ($book->cover_path) {
-                Storage::disk('public')->delete($book->cover_path);
-            }
-            $book->cover_path = $request->file('cover')->store('covers', 'public');
+            PublicFileUpload::deleteStored($book->cover_path);
+            $book->cover_path = PublicFileUpload::move($request->file('cover'), 'covers');
         }
 
         if ($request->file('pdf')) {
-            Storage::disk('local')->delete($book->pdf_path);
-            $book->pdf_path = $request->file('pdf')->store('books', 'local');
+            PublicFileUpload::deleteStored($book->pdf_path);
+            $book->pdf_path = PublicFileUpload::move($request->file('pdf'), 'books');
         }
 
         if ($request->file('preview_pdf')) {
-            if ($book->preview_pdf_path) {
-                Storage::disk('public')->delete($book->preview_pdf_path);
-            }
-            $book->preview_pdf_path = $request->file('preview_pdf')->store('previews', 'public');
+            PublicFileUpload::deleteStored($book->preview_pdf_path);
+            $book->preview_pdf_path = PublicFileUpload::move($request->file('preview_pdf'), 'previews');
         }
 
         $book->save();

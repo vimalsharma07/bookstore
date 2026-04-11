@@ -109,8 +109,8 @@ class BookController extends Controller
         abort_unless($book->is_active, 404);
         abort_if(! $book->preview_pdf_path, 404);
 
-        $path = public_path('storage/'.$book->preview_pdf_path);
-        abort_unless(file_exists($path), 404);
+        $path = $book->previewPdfAbsolutePath();
+        abort_unless($path && file_exists($path), 404);
 
         return response()->file($path, [
             'Content-Type' => 'application/pdf',

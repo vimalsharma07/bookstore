@@ -34,8 +34,8 @@ class LibraryController extends Controller
             'last_downloaded_at' => now(),
         ])->save();
 
-        $path = storage_path('app/'.$book->pdf_path);
-        if (! file_exists($path)) {
+        $path = $book->pdfAbsolutePath();
+        if (! $path || ! file_exists($path)) {
             return redirect()
                 ->route('library.index')
                 ->with('status', 'This is a demo book (no PDF file uploaded yet). Ask admin to upload the PDF in Admin → Books.');

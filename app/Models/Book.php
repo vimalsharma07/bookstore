@@ -80,7 +80,38 @@ class Book extends Model
         if (! $this->cover_path) {
             return null;
         }
-        return asset('storage/'.$this->cover_path);
+        $path = ltrim((string) $this->cover_path, '/');
+        if (str_starts_with($path, 'uploads/')) {
+            return asset($path);
+        }
+
+        return asset('storage/'.$path);
+    }
+
+    /** Full path to full book PDF (public uploads or legacy storage/app). */
+    public function pdfAbsolutePath(): ?string
+    {
+        if (! $this->pdf_path) {
+            return null;
+        }
+        if (str_starts_with($this->pdf_path, 'uploads/')) {
+            return public_path($this->pdf_path);
+        }
+
+        return storage_path('app/'.$this->pdf_path);
+    }
+
+    /** Full path to preview PDF. */
+    public function previewPdfAbsolutePath(): ?string
+    {
+        if (! $this->preview_pdf_path) {
+            return null;
+        }
+        if (str_starts_with($this->preview_pdf_path, 'uploads/')) {
+            return public_path($this->preview_pdf_path);
+        }
+
+        return public_path('storage/'.$this->preview_pdf_path);
     }
 
     public function getDisplayPriceAttribute(): string

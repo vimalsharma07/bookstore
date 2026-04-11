@@ -140,7 +140,7 @@ class StoreSeeder extends Seeder
                     'price_cents' => $b['price_cents'],
                     'currency' => $b['currency'],
                     // You can replace these by uploading real PDFs in admin.
-                    'pdf_path' => 'books/demo.pdf',
+                    'pdf_path' => 'uploads/books/demo.pdf',
                     'preview_pdf_path' => null,
                     'cover_path' => null,
                     'is_active' => true,
