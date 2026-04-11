@@ -28,8 +28,38 @@ return Application::configure(basePath: dirname(__DIR__))
                 Artisan::call('migrate', ['--force' => true]);
                 $steps['migrate'] = trim(Artisan::output()) ?: 'OK';
 
-                Artisan::call('storage:link', ['--force' => true]);
-                $steps['storage:link'] = trim(Artisan::output()) ?: 'OK';
+                // Avoid Artisan storage:link: Filesystem::link() calls exec() without leading \,
+                // which breaks under Illuminate\Filesystem; shared hosts often restrict exec/symlink.
+                $steps['storage:link'] = (function (): string {
+                    $links = config('filesystems.links') ?: [];
+                    $lines = [];
+                    foreach ($links as $link => $target) {
+                        if (file_exists($link) && ! is_link($link)) {
+                            $lines[] = "Skip {$link}: path exists and is not a symlink";
+
+                            continue;
+                        }
+                        if (is_link($link)) {
+                            @unlink($link);
+                        }
+                        if (! function_exists('symlink')) {
+                            $lines[] = 'symlink() unavailable; create public/storage → storage/app/public in hosting panel';
+
+                            continue;
+                        }
+                        try {
+                            if (@\symlink($target, $link)) {
+                                $lines[] = "Linked {$link} → {$target}";
+                            } else {
+                                $lines[] = "Failed {$link} (permissions or open_basedir)";
+                            }
+                        } catch (\Throwable $e) {
+                            $lines[] = $e->getMessage();
+                        }
+                    }
+
+                    return $lines !== [] ? implode("\n", $lines) : 'No links configured';
+                })();
 
                 Artisan::call('db:seed', ['--force' => true]);
                 $steps['db:seed'] = trim(Artisan::output()) ?: 'OK';
