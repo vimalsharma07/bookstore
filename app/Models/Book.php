@@ -65,6 +65,20 @@ class Book extends Model
         return $this->hasMany(Review::class);
     }
 
+    /** Recalculate cached rating_avg and reviews_count from approved reviews. */
+    public function refreshReviewAggregates(): void
+    {
+        $stats = Review::query()
+            ->where('book_id', $this->id)
+            ->approved()
+            ->selectRaw('COUNT(*) as c, AVG(rating) as a')
+            ->first();
+
+        $this->reviews_count = (int) ($stats->c ?? 0);
+        $this->rating_avg = round((float) ($stats->a ?? 0), 2);
+        $this->save();
+    }
+
     public function libraryItems(): HasMany
     {
         return $this->hasMany(LibraryItem::class);

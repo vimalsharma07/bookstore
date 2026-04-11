@@ -7,6 +7,7 @@
                     <a class="px-3 py-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition" href="{{ route('admin.books.index') }}">Books</a>
                     <a class="px-3 py-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition" href="{{ route('admin.categories.index') }}">Categories</a>
                     <a class="px-3 py-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition" href="{{ route('admin.orders.index') }}">Orders</a>
+                    <a class="px-3 py-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition" href="{{ route('admin.reviews.index') }}">Reviews</a>
                 </div>
             </div>
         </aside>

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -13,6 +14,7 @@ class Review extends Model
         'rating',
         'title',
         'body',
+        'reviewer_name',
         'is_approved',
     ];
 
@@ -29,5 +31,20 @@ class Review extends Model
     public function book(): BelongsTo
     {
         return $this->belongsTo(Book::class);
+    }
+
+    public function getReviewerDisplayNameAttribute(): string
+    {
+        return (string) ($this->user?->name ?? $this->reviewer_name ?: 'Reader');
+    }
+
+    public function scopeApproved(Builder $query): Builder
+    {
+        return $query->where('is_approved', true);
+    }
+
+    public function scopePending(Builder $query): Builder
+    {
+        return $query->where('is_approved', false);
     }
 }

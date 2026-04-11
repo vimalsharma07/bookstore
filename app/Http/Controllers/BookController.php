@@ -64,7 +64,7 @@ class BookController extends Controller
 
         $book->load(['categories']);
         $reviews = $book->reviews()
-            ->where('is_approved', true)
+            ->approved()
             ->latest()
             ->with('user:id,name')
             ->limit(12)
@@ -163,25 +163,11 @@ class BookController extends Controller
                 'rating' => $data['rating'],
                 'title' => $data['title'] ?? null,
                 'body' => $data['body'] ?? null,
+                'reviewer_name' => null,
                 'is_approved' => true,
             ]
         );
 
-        $this->recalculateBookRating($book);
-
         return back()->with('status', 'Thanks for your review.');
-    }
-
-    private function recalculateBookRating(Book $book): void
-    {
-        $stats = Review::query()
-            ->where('book_id', $book->id)
-            ->where('is_approved', true)
-            ->selectRaw('COUNT(*) as c, AVG(rating) as a')
-            ->first();
-
-        $book->reviews_count = (int) ($stats->c ?? 0);
-        $book->rating_avg = (float) ($stats->a ?? 0);
-        $book->save();
     }
 }

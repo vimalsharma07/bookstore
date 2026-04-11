@@ -94,7 +94,7 @@
                         @forelse ($reviews as $r)
                             <div class="rounded-2xl border border-black/5 dark:border-white/10 bg-white/60 dark:bg-white/5 p-4">
                                 <div class="flex items-center justify-between">
-                                    <div class="text-sm font-medium">{{ $r->user->name }}</div>
+                                    <div class="text-sm font-medium">{{ $r->reviewer_display_name }}</div>
                                     <div class="text-xs text-ink-500 dark:text-gray-300">★ {{ $r->rating }}</div>
                                 </div>
                                 @if($r->title)
