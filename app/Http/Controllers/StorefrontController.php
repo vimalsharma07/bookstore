@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Book;
 use App\Models\Category;
+use App\Models\Review;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,6 +25,14 @@ class StorefrontController extends Controller
             ->orderByDesc('purchases_count')
             ->limit(8)
             ->get();
+
+        $heroStrip = $featured->take(4);
+        $heroMarquee = $featured->take(8);
+
+        $stats = [
+            'books' => Book::query()->where('is_active', true)->count(),
+            'reviews' => Review::query()->where('is_approved', true)->count(),
+        ];
 
         $recommended = collect();
         $user = Auth::user();
@@ -50,6 +59,9 @@ class StorefrontController extends Controller
         return view('store.home', [
             'categories' => $categories,
             'featured' => $featured,
+            'heroStrip' => $heroStrip,
+            'heroMarquee' => $heroMarquee,
+            'stats' => $stats,
             'recommended' => $recommended,
         ]);
     }

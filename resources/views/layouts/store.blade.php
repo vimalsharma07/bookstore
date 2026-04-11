@@ -5,8 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ $title ?? config('app.name', 'BookQueue
-') }}</title>
+        <title>{{ $title ?? config('app.name', 'BookQueue') }}</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700&family=fraunces:400,600,700&display=swap" rel="stylesheet" />
@@ -80,8 +79,7 @@
         <footer class="border-t border-black/5 dark:border-white/10">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 text-sm text-ink-500 dark:text-gray-300 flex flex-col lg:flex-row gap-6 lg:items-center lg:justify-between">
                 <div>
-                    <div class="font-display text-base text-ink-900 dark:text-white">BookQueue
-</div>
+                    <div class="font-display text-base text-ink-900 dark:text-white">BookQueue</div>
                     <div class="mt-1">Built for comfortable reading and discovery.</div>
                 </div>
 
