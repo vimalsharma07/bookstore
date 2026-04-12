@@ -60,4 +60,10 @@ class PublicFileUpload
         }
         Storage::disk('public')->delete($path);
     }
+
+    /** Payment proof screenshot: public/uploads/payment-proofs/{orderId}/file.ext */
+    public static function movePaymentProof(UploadedFile $file, int $orderId): string
+    {
+        return self::move($file, 'payment-proofs/'.$orderId);
+    }
 }

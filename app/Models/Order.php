@@ -17,12 +17,15 @@ class Order extends Model
         'stripe_payment_intent_id',
         'email',
         'billing_details',
+        'payment_proof_path',
+        'payment_proof_submitted_at',
         'paid_at',
     ];
 
     protected $casts = [
         'billing_details' => 'array',
         'paid_at' => 'datetime',
+        'payment_proof_submitted_at' => 'datetime',
         'total_cents' => 'integer',
     ];
 

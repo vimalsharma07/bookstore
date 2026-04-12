@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Currency;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -16,6 +17,9 @@ class Book extends Model
         'author',
         'description',
         'price_cents',
+        'price_cents_usd',
+        'price_cents_eur',
+        'price_cents_inr',
         'currency',
         'cover_path',
         'pdf_path',
@@ -41,6 +45,24 @@ class Book extends Model
             $book->uuid = $book->uuid ?: (string) Str::uuid();
             $book->slug = $book->slug ?: static::uniqueSlug($book->title);
         });
+
+        static::saving(function (Book $book): void {
+            if ($book->price_cents_usd !== null) {
+                $book->price_cents = (int) $book->price_cents_usd;
+                $book->currency = 'USD';
+            }
+        });
+    }
+
+    public function priceCentsIn(?string $currency = null): int
+    {
+        $currency = strtoupper($currency ?? Currency::current());
+
+        return match ($currency) {
+            'EUR' => (int) ($this->price_cents_eur ?? $this->price_cents_usd ?? $this->price_cents),
+            'INR' => (int) ($this->price_cents_inr ?? $this->price_cents_usd ?? $this->price_cents),
+            default => (int) ($this->price_cents_usd ?? $this->price_cents),
+        };
     }
 
     private static function uniqueSlug(string $title): string
@@ -130,7 +152,8 @@ class Book extends Model
 
     public function getDisplayPriceAttribute(): string
     {
-        $amount = $this->price_cents / 100;
-        return strtoupper($this->currency).' '.number_format($amount, 2);
+        $ccy = Currency::current();
+
+        return Currency::format($this->priceCentsIn($ccy), $ccy);
     }
 }

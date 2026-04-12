@@ -131,13 +131,20 @@ class StoreSeeder extends Seeder
                 $i++;
             }
 
+            $usd = (int) $b['price_cents'];
+            $eur = (int) round($usd * 0.93);
+            $inr = (int) round(($usd / 100) * 83 * 100);
+
             $book = Book::updateOrCreate(
                 ['title' => $b['title'], 'author' => $b['author']],
                 [
                     'uuid' => (string) Str::uuid(),
                     'slug' => $slug,
                     'description' => $b['description'],
-                    'price_cents' => $b['price_cents'],
+                    'price_cents' => $usd,
+                    'price_cents_usd' => $usd,
+                    'price_cents_eur' => $eur,
+                    'price_cents_inr' => $inr,
                     'currency' => $b['currency'],
                     // You can replace these by uploading real PDFs in admin.
                     'pdf_path' => 'uploads/books/demo.pdf',

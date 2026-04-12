@@ -78,14 +78,18 @@ class Cart
             ->get()
             ->keyBy('id');
 
-        return collect($raw)->map(function (int $qty, int $bookId) use ($books) {
+        $ccy = Currency::current();
+
+        return collect($raw)->map(function (int $qty, int $bookId) use ($books, $ccy) {
             /** @var Book|null $book */
             $book = $books->get($bookId);
             if (! $book) {
                 return null;
             }
 
-            $subtotal = $book->price_cents * $qty;
+            $unit = $book->priceCentsIn($ccy);
+            $subtotal = $unit * $qty;
+
             return [
                 'book' => $book,
                 'qty' => $qty,

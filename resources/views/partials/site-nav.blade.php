@@ -14,6 +14,16 @@
                 @auth
                     <a href="{{ route('library.index') }}" class="px-3 py-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition text-sm">My Library</a>
                 @endauth
+                @php($shopCurrency = \App\Services\Currency::current())
+                <form method="POST" action="{{ route('currency.update') }}" class="flex items-center">
+                    @csrf
+                    <label for="shop-currency" class="sr-only">Currency</label>
+                    <select name="currency" id="shop-currency" onchange="this.form.submit()" class="text-sm rounded-xl border border-black/10 dark:border-white/15 bg-white/60 dark:bg-white/5 px-2.5 py-2 min-w-[5.5rem]">
+                        <option value="USD" @selected($shopCurrency === 'USD')>USD</option>
+                        <option value="EUR" @selected($shopCurrency === 'EUR')>EUR</option>
+                        <option value="INR" @selected($shopCurrency === 'INR')>INR</option>
+                    </select>
+                </form>
             </div>
 
             <div class="flex items-center gap-2">
@@ -61,6 +71,16 @@
 
         <div data-nav-panel class="hidden md:hidden pb-4">
             <div class="flex flex-col gap-2">
+                @php($shopCurrency = \App\Services\Currency::current())
+                <form method="POST" action="{{ route('currency.update') }}" class="px-3 py-2 flex items-center gap-2">
+                    @csrf
+                    <label for="shop-currency-mobile" class="text-sm text-ink-500 dark:text-gray-300">Currency</label>
+                    <select name="currency" id="shop-currency-mobile" onchange="this.form.submit()" class="flex-1 text-sm rounded-xl border border-black/10 dark:border-white/15 bg-white/60 dark:bg-white/5 px-2.5 py-2">
+                        <option value="USD" @selected($shopCurrency === 'USD')>USD</option>
+                        <option value="EUR" @selected($shopCurrency === 'EUR')>EUR</option>
+                        <option value="INR" @selected($shopCurrency === 'INR')>INR</option>
+                    </select>
+                </form>
                 <a href="{{ route('books.index') }}" class="px-3 py-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition text-sm">Browse</a>
                 <a href="{{ route('cart.show') }}" class="px-3 py-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition text-sm">Cart</a>
                 @auth

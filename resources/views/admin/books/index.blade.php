@@ -14,7 +14,7 @@
                     <tr>
                         <th class="text-left px-4 py-3">Title</th>
                         <th class="text-left px-4 py-3">Author</th>
-                        <th class="text-left px-4 py-3">Price</th>
+                        <th class="text-left px-4 py-3">Prices (USD / EUR / INR)</th>
                         <th class="text-left px-4 py-3">Rating</th>
                         <th class="text-left px-4 py-3">Active</th>
                         <th class="px-4 py-3"></th>
@@ -25,7 +25,14 @@
                         <tr class="border-t border-black/5 dark:border-white/10">
                             <td class="px-4 py-3 font-medium">{{ $b->title }}</td>
                             <td class="px-4 py-3 text-ink-500 dark:text-gray-300">{{ $b->author }}</td>
-                            <td class="px-4 py-3">{{ $b->display_price }}</td>
+                            <td class="px-4 py-3 text-xs leading-relaxed">
+                                @php($u = $b->price_cents_usd ?? $b->price_cents)
+                                @php($e = $b->price_cents_eur ?? $u)
+                                @php($i = $b->price_cents_inr ?? $u)
+                                <div>{{ \App\Services\Currency::format($u, 'USD') }}</div>
+                                <div class="text-ink-500 dark:text-gray-400">{{ \App\Services\Currency::format($e, 'EUR') }}</div>
+                                <div class="text-ink-500 dark:text-gray-400">{{ \App\Services\Currency::format($i, 'INR') }}</div>
+                            </td>
                             <td class="px-4 py-3 text-ink-500 dark:text-gray-300">★ {{ number_format((float)$b->rating_avg, 1) }}</td>
                             <td class="px-4 py-3">
                                 <span class="text-xs px-2 py-1 rounded-full {{ $b->is_active ? 'bg-emerald-100 text-emerald-900' : 'bg-amber-100 text-amber-900' }}">

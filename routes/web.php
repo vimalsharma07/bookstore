@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\AdminReviewController;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\LibraryController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StorefrontController;
@@ -23,6 +24,8 @@ Route::view('/faq', 'pages.faq')->name('pages.faq');
 Route::view('/privacy', 'pages.privacy')->name('pages.privacy');
 Route::view('/terms', 'pages.terms')->name('pages.terms');
 Route::view('/refunds', 'pages.refunds')->name('pages.refunds');
+
+Route::post('/currency', [CurrencyController::class, 'update'])->name('currency.update');
 
 Route::get('/books', [BookController::class, 'index'])->name('books.index');
 Route::get('/books/{book:slug}', [BookController::class, 'show'])->name('books.show');
@@ -55,7 +58,7 @@ Route::middleware('auth')->group(function () {
     Route::match(['get', 'post'], '/checkout/cart', [CheckoutController::class, 'startFromCart'])->name('checkout.cart');
     Route::post('/checkout/{book:slug}', [CheckoutController::class, 'start'])->name('checkout.start'); // single-book
     Route::get('/checkout/pending/{order}', [CheckoutController::class, 'pending'])->name('checkout.pending');
-    Route::post('/checkout/pending/{order}/pay', [CheckoutController::class, 'pay'])->name('checkout.pay');
+    Route::post('/checkout/pending/{order}/payment-proof', [CheckoutController::class, 'submitPaymentProof'])->name('checkout.payment-proof');
 });
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -73,6 +76,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
+    Route::post('/orders/{order}/confirm-payment', [AdminOrderController::class, 'confirmPayment'])->name('orders.confirm-payment');
 
     Route::get('/reviews', [AdminReviewController::class, 'index'])->name('reviews.index');
     Route::get('/reviews/create', [AdminReviewController::class, 'create'])->name('reviews.create');

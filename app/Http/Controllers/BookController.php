@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Book;
 use App\Models\Review;
+use App\Services\Currency;
 use App\Models\UserBookActivity;
 use App\Models\WishlistItem;
 use Illuminate\Http\Request;
@@ -19,6 +20,7 @@ class BookController extends Controller
         $min = $request->query('min');
         $max = $request->query('max');
         $sort = (string) $request->query('sort', 'popular');
+        $priceCol = Currency::priceColumn();
 
         $books = Book::query()
             ->where('is_active', true)
@@ -30,12 +32,12 @@ class BookController extends Controller
                 });
             })
             ->when($category !== '', fn ($query) => $query->whereHas('categories', fn ($cq) => $cq->where('slug', $category)))
-            ->when(is_numeric($min), fn ($query) => $query->where('price_cents', '>=', (int) round(((float) $min) * 100)))
-            ->when(is_numeric($max), fn ($query) => $query->where('price_cents', '<=', (int) round(((float) $max) * 100)))
+            ->when(is_numeric($min), fn ($query) => $query->where($priceCol, '>=', (int) round(((float) $min) * 100)))
+            ->when(is_numeric($max), fn ($query) => $query->where($priceCol, '<=', (int) round(((float) $max) * 100)))
             ->when($sort === 'new', fn ($query) => $query->orderByDesc('published_at'))
             ->when($sort === 'rating', fn ($query) => $query->orderByDesc('rating_avg'))
-            ->when($sort === 'price_low', fn ($query) => $query->orderBy('price_cents'))
-            ->when($sort === 'price_high', fn ($query) => $query->orderByDesc('price_cents'))
+            ->when($sort === 'price_low', fn ($query) => $query->orderBy($priceCol))
+            ->when($sort === 'price_high', fn ($query) => $query->orderByDesc($priceCol))
             ->when($sort === 'popular', fn ($query) => $query->orderByDesc('purchases_count'))
             ->paginate(12)
             ->withQueryString();

@@ -19,13 +19,22 @@
                     <label class="text-sm text-ink-500 dark:text-gray-300">Author</label>
                     <input name="author" required class="mt-1 w-full px-4 py-3 rounded-2xl border border-black/10 dark:border-white/15 bg-white/70 dark:bg-white/5" />
                 </div>
-                <div>
-                    <label class="text-sm text-ink-500 dark:text-gray-300">Price</label>
-                    <input name="price" required placeholder="9.99" class="mt-1 w-full px-4 py-3 rounded-2xl border border-black/10 dark:border-white/15 bg-white/70 dark:bg-white/5" />
-                </div>
-                <div>
-                    <label class="text-sm text-ink-500 dark:text-gray-300">Currency</label>
-                    <input name="currency" required value="USD" class="mt-1 w-full px-4 py-3 rounded-2xl border border-black/10 dark:border-white/15 bg-white/70 dark:bg-white/5" />
+                <div class="md:col-span-2">
+                    <div class="text-sm font-medium text-ink-700 dark:text-gray-200">Prices (set each currency)</div>
+                    <div class="mt-2 grid sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="text-xs text-ink-500 dark:text-gray-300">USD ($)</label>
+                            <input name="price_usd" required placeholder="9.99" step="0.01" min="0" class="mt-1 w-full px-4 py-3 rounded-2xl border border-black/10 dark:border-white/15 bg-white/70 dark:bg-white/5" />
+                        </div>
+                        <div>
+                            <label class="text-xs text-ink-500 dark:text-gray-300">EUR (€)</label>
+                            <input name="price_eur" required placeholder="9.49" step="0.01" min="0" class="mt-1 w-full px-4 py-3 rounded-2xl border border-black/10 dark:border-white/15 bg-white/70 dark:bg-white/5" />
+                        </div>
+                        <div>
+                            <label class="text-xs text-ink-500 dark:text-gray-300">INR (₹)</label>
+                            <input name="price_inr" required placeholder="799.00" step="0.01" min="0" class="mt-1 w-full px-4 py-3 rounded-2xl border border-black/10 dark:border-white/15 bg-white/70 dark:bg-white/5" />
+                        </div>
+                    </div>
                 </div>
             </div>
 

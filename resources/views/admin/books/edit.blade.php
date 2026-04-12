@@ -21,13 +21,22 @@
                     <label class="text-sm text-ink-500 dark:text-gray-300">Author</label>
                     <input name="author" required value="{{ $book->author }}" class="mt-1 w-full px-4 py-3 rounded-2xl border border-black/10 dark:border-white/15 bg-white/70 dark:bg-white/5" />
                 </div>
-                <div>
-                    <label class="text-sm text-ink-500 dark:text-gray-300">Price</label>
-                    <input name="price" required value="{{ number_format($book->price_cents / 100, 2, '.', '') }}" class="mt-1 w-full px-4 py-3 rounded-2xl border border-black/10 dark:border-white/15 bg-white/70 dark:bg-white/5" />
-                </div>
-                <div>
-                    <label class="text-sm text-ink-500 dark:text-gray-300">Currency</label>
-                    <input name="currency" required value="{{ $book->currency }}" class="mt-1 w-full px-4 py-3 rounded-2xl border border-black/10 dark:border-white/15 bg-white/70 dark:bg-white/5" />
+                <div class="md:col-span-2">
+                    <div class="text-sm font-medium text-ink-700 dark:text-gray-200">Prices (USD / EUR / INR)</div>
+                    <div class="mt-2 grid sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="text-xs text-ink-500 dark:text-gray-300">USD ($)</label>
+                            <input name="price_usd" required value="{{ number_format(($book->price_cents_usd ?? $book->price_cents) / 100, 2, '.', '') }}" step="0.01" min="0" class="mt-1 w-full px-4 py-3 rounded-2xl border border-black/10 dark:border-white/15 bg-white/70 dark:bg-white/5" />
+                        </div>
+                        <div>
+                            <label class="text-xs text-ink-500 dark:text-gray-300">EUR (€)</label>
+                            <input name="price_eur" required value="{{ number_format(($book->price_cents_eur ?? $book->price_cents_usd ?? $book->price_cents) / 100, 2, '.', '') }}" step="0.01" min="0" class="mt-1 w-full px-4 py-3 rounded-2xl border border-black/10 dark:border-white/15 bg-white/70 dark:bg-white/5" />
+                        </div>
+                        <div>
+                            <label class="text-xs text-ink-500 dark:text-gray-300">INR (₹)</label>
+                            <input name="price_inr" required value="{{ number_format(($book->price_cents_inr ?? $book->price_cents_usd ?? $book->price_cents) / 100, 2, '.', '') }}" step="0.01" min="0" class="mt-1 w-full px-4 py-3 rounded-2xl border border-black/10 dark:border-white/15 bg-white/70 dark:bg-white/5" />
+                        </div>
+                    </div>
                 </div>
             </div>
 

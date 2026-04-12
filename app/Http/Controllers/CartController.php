@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Book;
 use App\Services\Cart;
+use App\Services\Currency;
 use Illuminate\Http\Request;
 
 class CartController extends Controller
@@ -12,7 +13,7 @@ class CartController extends Controller
     {
         $lines = Cart::lines();
         $totalCents = $lines->sum('subtotal_cents');
-        $currency = $lines->first()['book']->currency ?? 'USD';
+        $currency = Currency::current();
 
         return view('store.cart.show', [
             'lines' => $lines,

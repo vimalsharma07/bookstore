@@ -6,9 +6,10 @@ use App\Models\Book;
 use App\Models\LibraryItem;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Services\Cart;
-use App\Services\TestPaymentGateway;
 use App\Models\UserBookActivity;
+use App\Services\Cart;
+use App\Services\Currency;
+use App\Support\PublicFileUpload;
 use Illuminate\Http\Request;
 
 class CheckoutController extends Controller
@@ -19,30 +20,28 @@ class CheckoutController extends Controller
 
         $user = $request->user();
 
-        // Already owned? send to library.
-        if (\App\Models\LibraryItem::query()->where('user_id', $user->id)->where('book_id', $book->id)->exists()) {
+        if (LibraryItem::query()->where('user_id', $user->id)->where('book_id', $book->id)->exists()) {
             return redirect()->route('library.index')->with('status', 'You already own this book.');
         }
+
+        $ccy = Currency::current();
+        $unit = $book->priceCentsIn($ccy);
 
         $order = Order::create([
             'user_id' => $user->id,
             'status' => 'pending',
-            'currency' => $book->currency,
-            'total_cents' => $book->price_cents,
+            'currency' => $ccy,
+            'total_cents' => $unit,
             'email' => $user->email,
         ]);
 
         OrderItem::create([
             'order_id' => $order->id,
             'book_id' => $book->id,
-            'unit_price_cents' => $book->price_cents,
+            'unit_price_cents' => $unit,
             'quantity' => 1,
             'title_snapshot' => $book->title,
         ]);
-
-        // Payment gateway integration point:
-        // - Create a payment session/redirect using your provider
-        // - When payment is confirmed, mark order as paid and create a LibraryItem for the user+book
 
         return redirect()->route('checkout.pending', $order);
     }
@@ -56,31 +55,34 @@ class CheckoutController extends Controller
             return redirect()->route('cart.show')->with('status', 'Your cart is empty.');
         }
 
-        // For simplicity we assume one currency across cart.
-        $currency = $lines->first()['book']->currency;
-        $totalCents = (int) $lines->sum('subtotal_cents');
+        $ccy = Currency::current();
+        $totalCents = 0;
 
         $order = Order::create([
             'user_id' => $user->id,
             'status' => 'pending',
-            'currency' => $currency,
-            'total_cents' => $totalCents,
+            'currency' => $ccy,
+            'total_cents' => 0,
             'email' => $user->email,
         ]);
 
         foreach ($lines as $line) {
-            /** @var \App\Models\Book $book */
+            /** @var Book $book */
             $book = $line['book'];
             $qty = (int) $line['qty'];
+            $unit = $book->priceCentsIn($ccy);
+            $totalCents += $unit * $qty;
 
             OrderItem::create([
                 'order_id' => $order->id,
                 'book_id' => $book->id,
-                'unit_price_cents' => $book->price_cents,
+                'unit_price_cents' => $unit,
                 'quantity' => $qty,
                 'title_snapshot' => $book->title,
             ]);
         }
+
+        $order->update(['total_cents' => $totalCents]);
 
         Cart::clear();
 
@@ -94,36 +96,40 @@ class CheckoutController extends Controller
 
         return view('store.checkout.pending', [
             'order' => $order,
+            'paymentEmail' => config('bookqueue.payment_email'),
         ]);
     }
 
-    public function pay(Request $request, Order $order)
+    public function submitPaymentProof(Request $request, Order $order)
     {
         abort_unless($order->user_id === $request->user()->id, 403);
-        $order->load('items.book');
 
         if ($order->status === 'paid') {
-            return redirect()->route('library.index')->with('status', 'Order already paid. Your books are in My Library.');
+            return redirect()->route('library.index')->with('status', 'This order is already complete.');
         }
 
-        $data = $request->validate([
-            'card_number' => ['required', 'string', 'max:30'],
-            'expiry' => ['required', 'string', 'max:7'],
-            'cvc' => ['required', 'string', 'max:4'],
+        $request->validate([
+            'payment_proof' => ['required', 'image', 'max:5120', 'mimes:jpeg,jpg,png,webp'],
         ]);
 
-        $result = TestPaymentGateway::charge($data['card_number'], $data['expiry'], $data['cvc']);
-
-        if (! $result['ok']) {
-            $order->update(['status' => 'failed']);
-            return back()->with('status', $result['message']);
+        if ($order->payment_proof_path) {
+            PublicFileUpload::deletePublic($order->payment_proof_path);
         }
 
-        // Mark order as paid and fulfill.
+        $path = PublicFileUpload::movePaymentProof($request->file('payment_proof'), $order->id);
+
         $order->forceFill([
-            'status' => 'paid',
-            'paid_at' => now(),
+            'payment_proof_path' => $path,
+            'payment_proof_submitted_at' => now(),
+            'status' => 'payment_submitted',
         ])->save();
+
+        return back()->with('status', 'Payment proof received. We will confirm your order shortly—usually within 5 minutes during business hours.');
+    }
+
+    public static function fulfillOrder(Order $order): void
+    {
+        $order->load('items.book');
 
         foreach ($order->items as $item) {
             $book = $item->book;
@@ -149,7 +155,5 @@ class CheckoutController extends Controller
                 'occurred_at' => now(),
             ]);
         }
-
-        return redirect()->route('library.index')->with('status', 'Payment successful. Your books are now available in My Library.');
     }
 }

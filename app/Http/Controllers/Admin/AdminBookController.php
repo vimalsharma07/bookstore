@@ -13,12 +13,14 @@ class AdminBookController extends Controller
     public function index()
     {
         $books = Book::query()->with('categories')->latest()->paginate(20);
+
         return view('admin.books.index', compact('books'));
     }
 
     public function create()
     {
         $categories = Category::query()->orderBy('sort_order')->orderBy('name')->get();
+
         return view('admin.books.create', compact('categories'));
     }
 
@@ -28,8 +30,9 @@ class AdminBookController extends Controller
             'title' => ['required', 'string', 'max:200'],
             'author' => ['required', 'string', 'max:200'],
             'description' => ['required', 'string', 'max:10000'],
-            'price' => ['required', 'numeric', 'min:0'],
-            'currency' => ['required', 'string', 'size:3'],
+            'price_usd' => ['required', 'numeric', 'min:0'],
+            'price_eur' => ['required', 'numeric', 'min:0'],
+            'price_inr' => ['required', 'numeric', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
             'published_at' => ['nullable', 'date'],
             'categories' => ['nullable', 'array'],
@@ -39,15 +42,22 @@ class AdminBookController extends Controller
             'preview_pdf' => ['nullable', 'file', 'mimes:pdf', 'max:51200'],
         ]);
 
+        $usd = (int) round(((float) $data['price_usd']) * 100);
+        $eur = (int) round(((float) $data['price_eur']) * 100);
+        $inr = (int) round(((float) $data['price_inr']) * 100);
+
         $book = Book::create([
             'title' => $data['title'],
             'author' => $data['author'],
             'description' => $data['description'],
-            'price_cents' => (int) round(((float) $data['price']) * 100),
-            'currency' => strtoupper($data['currency']),
+            'price_cents' => $usd,
+            'currency' => 'USD',
+            'price_cents_usd' => $usd,
+            'price_cents_eur' => $eur,
+            'price_cents_inr' => $inr,
             'is_active' => (bool) ($data['is_active'] ?? true),
             'published_at' => $data['published_at'] ?? null,
-            'pdf_path' => 'tmp', // replaced below
+            'pdf_path' => 'tmp',
         ]);
 
         if ($request->file('cover')) {
@@ -71,6 +81,7 @@ class AdminBookController extends Controller
     {
         $categories = Category::query()->orderBy('sort_order')->orderBy('name')->get();
         $book->load('categories');
+
         return view('admin.books.edit', compact('book', 'categories'));
     }
 
@@ -80,8 +91,9 @@ class AdminBookController extends Controller
             'title' => ['required', 'string', 'max:200'],
             'author' => ['required', 'string', 'max:200'],
             'description' => ['required', 'string', 'max:10000'],
-            'price' => ['required', 'numeric', 'min:0'],
-            'currency' => ['required', 'string', 'size:3'],
+            'price_usd' => ['required', 'numeric', 'min:0'],
+            'price_eur' => ['required', 'numeric', 'min:0'],
+            'price_inr' => ['required', 'numeric', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
             'published_at' => ['nullable', 'date'],
             'categories' => ['nullable', 'array'],
@@ -91,12 +103,19 @@ class AdminBookController extends Controller
             'preview_pdf' => ['nullable', 'file', 'mimes:pdf', 'max:51200'],
         ]);
 
+        $usd = (int) round(((float) $data['price_usd']) * 100);
+        $eur = (int) round(((float) $data['price_eur']) * 100);
+        $inr = (int) round(((float) $data['price_inr']) * 100);
+
         $book->update([
             'title' => $data['title'],
             'author' => $data['author'],
             'description' => $data['description'],
-            'price_cents' => (int) round(((float) $data['price']) * 100),
-            'currency' => strtoupper($data['currency']),
+            'price_cents' => $usd,
+            'currency' => 'USD',
+            'price_cents_usd' => $usd,
+            'price_cents_eur' => $eur,
+            'price_cents_inr' => $inr,
             'is_active' => (bool) ($data['is_active'] ?? false),
             'published_at' => $data['published_at'] ?? null,
         ]);
