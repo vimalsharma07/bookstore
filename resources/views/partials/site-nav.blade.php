@@ -4,8 +4,7 @@
             <a href="{{ route('home') }}" class="flex items-center gap-2">
                 <div class="h-9 w-9 rounded-2xl bg-gradient-to-br from-amber-200 to-rose-200 dark:from-amber-400/20 dark:to-rose-400/20 border border-black/5 dark:border-white/10 shadow-soft"></div>
                 <div class="leading-tight">
-                    <div class="font-display text-lg tracking-tight">BookQueue
-</div>
+                    <div class="font-display text-lg tracking-tight">BookQueue</div>
                     <div class="text-xs text-ink-500 dark:text-gray-300 -mt-0.5">Read. Collect. Repeat.</div>
                 </div>
             </a>

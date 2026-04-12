@@ -22,6 +22,7 @@ Route::get('/home', [StorefrontController::class, 'home'])->name('home');
 Route::view('/faq', 'pages.faq')->name('pages.faq');
 Route::view('/privacy', 'pages.privacy')->name('pages.privacy');
 Route::view('/terms', 'pages.terms')->name('pages.terms');
+Route::view('/refunds', 'pages.refunds')->name('pages.refunds');
 
 Route::get('/books', [BookController::class, 'index'])->name('books.index');
 Route::get('/books/{book:slug}', [BookController::class, 'show'])->name('books.show');

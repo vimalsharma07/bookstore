@@ -83,10 +83,11 @@
                     <div class="mt-1">Built for comfortable reading and discovery.</div>
                 </div>
 
-                <div class="flex flex-wrap items-center gap-4">
+                <div class="flex flex-wrap items-center gap-x-5 gap-y-2">
                     <a href="{{ route('pages.faq') }}" class="hover:text-ink-900 dark:hover:text-white underline-offset-4 hover:underline transition">FAQ</a>
                     <a href="{{ route('pages.privacy') }}" class="hover:text-ink-900 dark:hover:text-white underline-offset-4 hover:underline transition">Privacy Policy</a>
                     <a href="{{ route('pages.terms') }}" class="hover:text-ink-900 dark:hover:text-white underline-offset-4 hover:underline transition">Terms & Conditions</a>
+                    <a href="{{ route('pages.refunds') }}" class="hover:text-ink-900 dark:hover:text-white underline-offset-4 hover:underline transition">Refund Policy</a>
                 </div>
             </div>
         </footer>
