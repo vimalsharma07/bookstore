@@ -32,7 +32,7 @@
 
                     <!-- Phone -->
                     <div class="rounded-xl border border-black/5 dark:border-white/10 p-4">
-                        <p class="text-sm text-ink-500">Conract Person</p> -->
+                        <p class="text-sm text-ink-500">Conract Person</p> 
                       <p class="font-medium">Amit Kumar</p>
                     </div>
 
