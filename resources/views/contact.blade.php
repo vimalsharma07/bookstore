@@ -27,19 +27,19 @@
                     <!-- Email -->
                     <div class="rounded-xl border border-black/5 dark:border-white/10 p-4">
                         <p class="text-sm text-ink-500">Email</p>
-                        <p class="font-medium">support@bookqueue.store</p>
+                        <p class="font-medium">contact@bookqueue.store</p>
                     </div>
 
                     <!-- Phone -->
                     <div class="rounded-xl border border-black/5 dark:border-white/10 p-4">
-                        <!-- <p class="text-sm text-ink-500">Phone</p> -->
-                        <!-- <p class="font-medium">+91 98765 43210</p> -->
+                        <p class="text-sm text-ink-500">Conract Person</p> -->
+                      <p class="font-medium">Amit Kumar</p>
                     </div>
 
                     <!-- Location -->
                     <div class="rounded-xl border border-black/5 dark:border-white/10 p-4 col-span-1 sm:col-span-2">
                         <p class="text-sm text-ink-500">Location</p>
-                        <p class="font-medium">21 Drury Ln, Covent Garden, London WC2B 5RH, United Kingdom</p>
+                        <p class="font-medium">Telco , Jamsedpur Jharkhand </p>
                     </div>
                 </div>
 
