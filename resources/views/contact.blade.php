@@ -48,7 +48,7 @@
                     <h3 class="font-semibold">Need quick help?</h3>
                     <p class="mt-2 text-sm text-ink-500 dark:text-gray-300">
                         Check our 
-                        <a href="{{ route('faq') }}" class="underline font-medium">
+                        <a href="{{ url('/faq') }}" class="underline font-medium">
                             FAQ page
                         </a> 
                         for instant answers.
