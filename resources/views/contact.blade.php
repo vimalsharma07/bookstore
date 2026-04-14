@@ -81,7 +81,7 @@
                 @endif
 
                 <!-- Form -->
-                <form action="{{ url('contact/submit') }}" method="POST" class="mt-5 space-y-4">
+                <form action="{{ url('contact/submit') }}"  class="mt-5 space-y-4">
                     @csrf
 
                     <div>
