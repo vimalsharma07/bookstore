@@ -24,8 +24,9 @@ Route::view('/faq', 'pages.faq')->name('pages.faq');
 Route::view('/privacy', 'pages.privacy')->name('pages.privacy');
 Route::view('/terms', 'pages.terms')->name('pages.terms');
 Route::view('/refunds', 'pages.refunds')->name('pages.refunds');
-Route::view('/contact/submit', 'success')->name('contact.submit');
-Route::post('/currency', [CurrencyController::class, 'update'])->name('currency.update');
+Route::post('/contact/submit', function () {
+    return view('success');
+})->name('contact.submit');Route::post('/currency', [CurrencyController::class, 'update'])->name('currency.update');
 
 Route::get('/books', [BookController::class, 'index'])->name('books.index');
 Route::get('/books/{book:slug}', [BookController::class, 'show'])->name('books.show');
