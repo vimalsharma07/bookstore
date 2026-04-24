@@ -12,7 +12,10 @@ use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\LibraryController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StorefrontController;
+use App\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -26,6 +29,23 @@ Route::view('/terms', 'pages.terms')->name('pages.terms');
 Route::view('/refunds', 'pages.refunds')->name('pages.refunds');
 
 Route::post('/currency', [CurrencyController::class, 'update'])->name('currency.update');
+
+Route::post('/payment/razorpay', function (Request $request) {
+    $forwardHeaders = array_filter([
+        'Content-Type' => $request->header('Content-Type'),
+        'X-Razorpay-Signature' => $request->header('X-Razorpay-Signature'),
+        'User-Agent' => $request->header('User-Agent'),
+    ]);
+
+    $response = Http::withHeaders($forwardHeaders)->send('POST', 'https://app.finvypay.com/api/v1/payment/razorpay/webhook', [
+        'body' => $request->getContent(),
+    ]);
+
+    return response()->json([
+        'success' => $response->successful(),
+        'status' => $response->status(),
+    ], $response->successful() ? 200 : 502);
+})->withoutMiddleware([VerifyCsrfToken::class]);
 
 Route::get('/books', [BookController::class, 'index'])->name('books.index');
 Route::get('/books/{book:slug}', [BookController::class, 'show'])->name('books.show');
