@@ -13,6 +13,7 @@
                     <tr>
                         <th class="text-left px-4 py-3">#</th>
                         <th class="text-left px-4 py-3">Event</th>
+                        <th class="text-left px-4 py-3">Request Payload</th>
                         <th class="text-left px-4 py-3">Signature</th>
                         <th class="text-left px-4 py-3">Forward URL</th>
                         <th class="text-left px-4 py-3">Forward Status</th>
@@ -24,6 +25,16 @@
                         <tr class="border-t border-black/5 dark:border-white/10">
                             <td class="px-4 py-3 font-medium">{{ $log->id }}</td>
                             <td class="px-4 py-3">{{ $log->event ?? 'unknown' }}</td>
+                            <td class="px-4 py-3">
+                                <button
+                                    type="button"
+                                    class="px-3 py-1.5 rounded-lg border border-black/10 dark:border-white/15 bg-white/60 dark:bg-white/5 hover:bg-white/90 dark:hover:bg-white/10 transition text-xs"
+                                    data-role="open-payload-modal"
+                                    data-payload='@json($log->request_payload ?? "")'
+                                >
+                                    View Payload
+                                </button>
+                            </td>
                             <td class="px-4 py-3 text-ink-500 dark:text-gray-300">{{ $log->signature ? \Illuminate\Support\Str::limit($log->signature, 28) : '—' }}</td>
                             <td class="px-4 py-3 text-ink-500 dark:text-gray-300">{{ $log->forwarded_to ?? '—' }}</td>
                             <td class="px-4 py-3">
@@ -35,7 +46,7 @@
                         </tr>
                     @empty
                         <tr class="border-t border-black/5 dark:border-white/10">
-                            <td class="px-4 py-4 text-ink-500 dark:text-gray-300" colspan="6">No webhook logs yet.</td>
+                            <td class="px-4 py-4 text-ink-500 dark:text-gray-300" colspan="7">No webhook logs yet.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -44,4 +55,60 @@
     </div>
 
     <div class="mt-6">{{ $logs->links() }}</div>
+
+    <div id="payload-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/60" data-role="close-payload-modal"></div>
+        <div class="relative mx-auto mt-16 w-[95%] max-w-4xl rounded-2xl border border-black/10 dark:border-white/15 bg-white dark:bg-[#141413] shadow-xl">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-black/10 dark:border-white/15">
+                <h2 class="font-display text-xl">Request Payload</h2>
+                <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10" data-role="close-payload-modal">Close</button>
+            </div>
+            <div class="p-4">
+                <pre id="payload-modal-content" class="max-h-[70vh] overflow-auto rounded-xl bg-black text-green-300 p-4 text-xs leading-relaxed"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const modal = document.getElementById('payload-modal');
+            const content = document.getElementById('payload-modal-content');
+            const openButtons = document.querySelectorAll('[data-role="open-payload-modal"]');
+            const closeButtons = document.querySelectorAll('[data-role="close-payload-modal"]');
+
+            const openModal = (payload) => {
+                let output = payload || '';
+
+                try {
+                    const parsed = JSON.parse(output);
+                    output = JSON.stringify(parsed, null, 2);
+                } catch (e) {
+                    // Keep raw text when payload is not valid JSON.
+                }
+
+                content.textContent = output || 'No payload available.';
+                modal.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            };
+
+            const closeModal = () => {
+                modal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            };
+
+            openButtons.forEach((button) => {
+                button.addEventListener('click', () => openModal(button.dataset.payload));
+            });
+
+            closeButtons.forEach((button) => {
+                button.addEventListener('click', closeModal);
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
+                    closeModal();
+                }
+            });
+        })();
+    </script>
 </x-admin.layout>
