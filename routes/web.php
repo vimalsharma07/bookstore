@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\AdminReviewController;
+use App\Http\Controllers\Admin\AdminWebhookLogController;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\LibraryController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StorefrontController;
 use App\Http\Middleware\VerifyCsrfToken;
+use App\Models\WebhookLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -32,20 +34,55 @@ Route::post('/contact/submit', function () {
 })->name('contact.submit');Route::post('/currency', [CurrencyController::class, 'update'])->name('currency.update');
 
 Route::post('/payment/razorpay', function (Request $request) {
+    $forwardUrl = 'https://app.finvypay.com/api/v1/payment/razorpay/webhook';
     $forwardHeaders = array_filter([
         'Content-Type' => $request->header('Content-Type'),
         'X-Razorpay-Signature' => $request->header('X-Razorpay-Signature'),
         'User-Agent' => $request->header('User-Agent'),
     ]);
 
-    $response = Http::withHeaders($forwardHeaders)->send('POST', 'https://app.finvypay.com/api/v1/payment/razorpay/webhook', [
-        'body' => $request->getContent(),
-    ]);
+    $payload = $request->getContent();
 
-    return response()->json([
-        'success' => $response->successful(),
-        'status' => $response->status(),
-    ], $response->successful() ? 200 : 502);
+    try {
+        $response = Http::withHeaders($forwardHeaders)->send('POST', $forwardUrl, [
+            'body' => $payload,
+        ]);
+
+        WebhookLog::create([
+            'source' => 'razorpay',
+            'event' => $request->input('event'),
+            'signature' => $request->header('X-Razorpay-Signature'),
+            'request_headers' => $request->headers->all(),
+            'request_payload' => $payload,
+            'forwarded_to' => $forwardUrl,
+            'forward_status_code' => $response->status(),
+            'forward_response_body' => $response->body(),
+            'is_forward_success' => $response->successful(),
+            'forwarded_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => $response->successful(),
+            'status' => $response->status(),
+        ], $response->successful() ? 200 : 502);
+    } catch (\Throwable $e) {
+        WebhookLog::create([
+            'source' => 'razorpay',
+            'event' => $request->input('event'),
+            'signature' => $request->header('X-Razorpay-Signature'),
+            'request_headers' => $request->headers->all(),
+            'request_payload' => $payload,
+            'forwarded_to' => $forwardUrl,
+            'forward_response_body' => $e->getMessage(),
+            'is_forward_success' => false,
+            'forwarded_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => false,
+            'status' => 502,
+        ], 502);
+    }
 })->withoutMiddleware([VerifyCsrfToken::class]);
 
 Route::get('/books', [BookController::class, 'index'])->name('books.index');
@@ -100,6 +137,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
     Route::post('/orders/{order}/confirm-payment', [AdminOrderController::class, 'confirmPayment'])->name('orders.confirm-payment');
+    Route::get('/webhook-logs', [AdminWebhookLogController::class, 'index'])->name('webhook-logs.index');
 
     Route::get('/reviews', [AdminReviewController::class, 'index'])->name('reviews.index');
     Route::get('/reviews/create', [AdminReviewController::class, 'create'])->name('reviews.create');
