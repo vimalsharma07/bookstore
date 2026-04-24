@@ -27,8 +27,9 @@ Route::view('/faq', 'pages.faq')->name('pages.faq');
 Route::view('/privacy', 'pages.privacy')->name('pages.privacy');
 Route::view('/terms', 'pages.terms')->name('pages.terms');
 Route::view('/refunds', 'pages.refunds')->name('pages.refunds');
-
-Route::post('/currency', [CurrencyController::class, 'update'])->name('currency.update');
+Route::post('/contact/submit', function () {
+    return view('success');
+})->name('contact.submit');Route::post('/currency', [CurrencyController::class, 'update'])->name('currency.update');
 
 Route::post('/payment/razorpay', function (Request $request) {
     $forwardHeaders = array_filter([
@@ -56,7 +57,9 @@ Route::post('/cart/add/{book:slug}', [CartController::class, 'add'])->name('cart
 Route::post('/cart/update', [CartController::class, 'update'])->name('cart.update');
 Route::post('/cart/remove/{book:slug}', [CartController::class, 'remove'])->name('cart.remove');
 Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
-
+Route::get('/contact', function () {
+    return view('contact');
+})->name('contact');
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
         if (Auth::user()?->is_admin) {

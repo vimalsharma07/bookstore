@@ -14,6 +14,8 @@
                 @auth
                     <a href="{{ route('library.index') }}" class="px-3 py-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition text-sm">My Library</a>
                 @endauth
+                <a href="{{ url('/contact') }}" class="px-3 py-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition text-sm">Contact</a>
+
                 @php($shopCurrency = \App\Services\Currency::current())
                 <form method="POST" action="{{ route('currency.update') }}" class="flex items-center">
                     @csrf
