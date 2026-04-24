@@ -6,6 +6,24 @@
         </div>
     </div>
 
+    <div class="mt-4 rounded-2xl border border-black/5 dark:border-white/10 bg-white/70 dark:bg-white/5 p-4">
+        <form method="GET" action="{{ route('admin.webhook-logs.index') }}" class="flex flex-col sm:flex-row gap-3">
+            <input
+                type="text"
+                name="search"
+                value="{{ $search ?? '' }}"
+                placeholder="Search in request payload..."
+                class="w-full rounded-xl border border-black/10 dark:border-white/15 bg-white/80 dark:bg-white/5 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black/20 dark:focus:ring-white/20"
+            >
+            <div class="flex gap-2">
+                <button type="submit" class="px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/15 bg-white/70 dark:bg-white/10 hover:bg-white dark:hover:bg-white/15 transition text-sm">Search</button>
+                @if(!empty($search))
+                    <a href="{{ route('admin.webhook-logs.index') }}" class="px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/15 bg-white/70 dark:bg-white/10 hover:bg-white dark:hover:bg-white/15 transition text-sm">Clear</a>
+                @endif
+            </div>
+        </form>
+    </div>
+
     <div class="mt-6 rounded-3xl border border-black/5 dark:border-white/10 bg-white/70 dark:bg-white/5 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
@@ -46,7 +64,9 @@
                         </tr>
                     @empty
                         <tr class="border-t border-black/5 dark:border-white/10">
-                            <td class="px-4 py-4 text-ink-500 dark:text-gray-300" colspan="7">No webhook logs yet.</td>
+                            <td class="px-4 py-4 text-ink-500 dark:text-gray-300" colspan="7">
+                                {{ !empty($search) ? 'No webhook logs found for this payload search.' : 'No webhook logs yet.' }}
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>
