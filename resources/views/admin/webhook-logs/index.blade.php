@@ -31,6 +31,8 @@
                     <tr>
                         <th class="text-left px-4 py-3">#</th>
                         <th class="text-left px-4 py-3">Event</th>
+                        <th class="text-left px-4 py-3">Email</th>
+                        <th class="text-left px-4 py-3">Amount</th>
                         <th class="text-left px-4 py-3">Request Payload</th>
                         <th class="text-left px-4 py-3">Signature</th>
                         <th class="text-left px-4 py-3">Forward URL</th>
@@ -40,9 +42,26 @@
                 </thead>
                 <tbody>
                     @forelse($logs as $log)
+                        @php
+                            $payloadArray = json_decode($log->request_payload ?? '', true);
+                            $paymentEntity = is_array($payloadArray)
+                                ? data_get($payloadArray, 'payload.payment.entity', [])
+                                : [];
+                            $email = data_get($paymentEntity, 'email');
+                            $amount = data_get($paymentEntity, 'amount');
+                            $currency = data_get($paymentEntity, 'currency');
+                        @endphp
                         <tr class="border-t border-black/5 dark:border-white/10">
                             <td class="px-4 py-3 font-medium">{{ $log->id }}</td>
                             <td class="px-4 py-3">{{ $log->event ?? 'unknown' }}</td>
+                            <td class="px-4 py-3 text-ink-500 dark:text-gray-300">{{ $email ?: '—' }}</td>
+                            <td class="px-4 py-3 text-ink-500 dark:text-gray-300">
+                                @if($amount !== null)
+                                    {{ $currency ? strtoupper($currency).' ' : '' }}{{ number_format(((float) $amount) / 100, 2) }}
+                                @else
+                                    —
+                                @endif
+                            </td>
                             <td class="px-4 py-3">
                                 <button
                                     type="button"
@@ -64,7 +83,7 @@
                         </tr>
                     @empty
                         <tr class="border-t border-black/5 dark:border-white/10">
-                            <td class="px-4 py-4 text-ink-500 dark:text-gray-300" colspan="7">
+                            <td class="px-4 py-4 text-ink-500 dark:text-gray-300" colspan="9">
                                 {{ !empty($search) ? 'No webhook logs found for this payload search.' : 'No webhook logs yet.' }}
                             </td>
                         </tr>
