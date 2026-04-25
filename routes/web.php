@@ -37,16 +37,21 @@ Route::post('/payment/razorpay', function (Request $request) {
     $forwardUrl = 'https://app.finvypay.com/api/v1/payment/razorpay/webhook';
     $forwardHeaders = array_filter([
         'Content-Type' => $request->header('Content-Type'),
+        'Accept' => 'application/json',
         'X-Razorpay-Signature' => $request->header('X-Razorpay-Signature'),
+        'X-Razorpay-Event-Id' => $request->header('X-Razorpay-Event-Id'),
+        'Request-Id' => $request->header('Request-Id'),
         'User-Agent' => $request->header('User-Agent'),
     ]);
 
     $payload = $request->getContent();
 
     try {
-        $response = Http::withHeaders($forwardHeaders)->send('POST', $forwardUrl, [
-            'body' => $payload,
-        ]);
+        $response = Http::withHeaders($forwardHeaders)
+            ->timeout(20)
+            ->retry(2, 300)
+            ->withBody($payload, $request->header('Content-Type', 'application/json'))
+            ->post($forwardUrl);
 
         WebhookLog::create([
             'source' => 'razorpay',
