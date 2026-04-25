@@ -34,7 +34,7 @@ Route::post('/contact/submit', function () {
 })->name('contact.submit');Route::post('/currency', [CurrencyController::class, 'update'])->name('currency.update');
 
 Route::post('/payment/razorpay', function (Request $request) {
-    $forwardUrl = 'https://app.finvypay.com/api/v1/payment/razorpay/webhook';
+    $forwardUrl = 'https://api.finvypay.com/api/v1/payment/razorpay/webhook';
     $forwardHeaders = array_filter([
         'Content-Type' => $request->header('Content-Type'),
         'Accept' => 'application/json',
