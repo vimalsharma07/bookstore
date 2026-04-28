@@ -45,12 +45,17 @@
 
         <div class="space-y-6">
             <div class="rounded-3xl border border-black/5 dark:border-white/10 bg-white/70 dark:bg-white/5 p-6">
-                <h2 class="font-display text-xl">PayPal (manual)</h2>
+                <h2 class="font-display text-xl">Payment</h2>
                 <div class="mt-3 text-sm text-ink-500 dark:text-gray-300 space-y-2">
-                    <div><span class="text-ink-700 dark:text-gray-200">Pay to:</span> <span class="font-mono break-all">{{ $paymentEmail }}</span></div>
                     <div><span class="text-ink-700 dark:text-gray-200">Total:</span> {{ strtoupper($order->currency) }} {{ number_format($order->total_cents / 100, 2) }}</div>
                     <div><span class="text-ink-700 dark:text-gray-200">Paid at:</span> {{ $order->paid_at?->format('M j, Y H:i') ?? '—' }}</div>
                     <div><span class="text-ink-700 dark:text-gray-200">Customer email:</span> {{ $order->email ?? $order->user?->email ?? '—' }}</div>
+                    @if($order->razorpay_payment_link_id)
+                        <div class="pt-2">
+                            <span class="text-ink-700 dark:text-gray-200">Razorpay payment link:</span>
+                            <span class="font-mono break-all text-xs">{{ $order->razorpay_payment_link_id }}</span>
+                        </div>
+                    @endif
                 </div>
                 @if($order->stripe_session_id || $order->stripe_payment_intent_id)
                     <div class="mt-4 pt-4 border-t border-black/10 dark:border-white/10 text-xs text-ink-500 space-y-1">
@@ -68,7 +73,7 @@
                 <div class="rounded-3xl border border-black/5 dark:border-white/10 bg-white/70 dark:bg-white/5 p-6">
                     <h2 class="font-display text-xl">Confirm payment</h2>
                     <p class="mt-2 text-sm text-ink-500 dark:text-gray-300">
-                        After you verify the PayPal payment matches this order, mark it paid to add books to the customer’s library.
+                        Use this if Razorpay did not confirm automatically or for a manual arrangement. Marking paid will grant library access.
                     </p>
                     @if($order->status === 'pending' && ! $order->payment_proof_path)
                         <p class="mt-3 text-sm text-amber-800 dark:text-amber-200 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 px-3 py-2">

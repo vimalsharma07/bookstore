@@ -22,9 +22,7 @@ class AdminOrderController extends Controller
     public function show(Order $order)
     {
         $order->load(['user:id,name,email', 'items.book']);
-        $paymentEmail = config('bookqueue.payment_email');
-
-        return view('admin.orders.show', compact('order', 'paymentEmail'));
+        return view('admin.orders.show', compact('order'));
     }
 
     public function confirmPayment(Request $request, Order $order)

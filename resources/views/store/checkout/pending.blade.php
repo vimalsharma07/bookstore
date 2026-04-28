@@ -1,13 +1,13 @@
-<x-layouts.store title="Checkout — Pay with PayPal">
+<x-layouts.store title="Checkout — Razorpay">
     <div class="max-w-6xl mx-auto">
         <div class="mb-8">
-            <div class="inline-flex items-center gap-2 rounded-full bg-[#0070ba]/10 dark:bg-[#0070ba]/20 px-3 py-1 text-xs font-medium text-[#0070ba]">
-                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7.076 21.337H2.47a.641.641 0 01-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19a.987.987 0 00-.969.804l-.84 5.533-.003.02a.641.641 0 01-.632.74z"/><path d="M23.048 7.667c-.022-.15-.048-.296-.077-.437-.292-1.867.002-3.138 1.012-4.287C25.095 1.676 23.087 1.133 20.517 1.133h-7.46c-.524 0-.972.382-1.054.901L.837 20.597a.641.641 0 00.633.74h4.606a.987.987 0 00.969-.804l.931-6.118h2.19c4.298 0 7.664-1.747 8.647-6.797.03-.149.054-.294.077-.437z"/></svg>
-                PayPal checkout
+            <div class="inline-flex items-center gap-2 rounded-full bg-[#3395FF]/15 dark:bg-[#3395FF]/20 px-3 py-1 text-xs font-medium text-[#0F4C81] dark:text-[#9EC9FF]">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.18l6.9 3.45L12 11.09 5.1 7.63 12 4.18zM4 8.82l7 3.5v7.36l-7-3.5V8.82zm9 11.36v-7.36l7-3.5v7.36l-7 3.5z"/></svg>
+                Razorpay checkout
             </div>
-            <h1 class="mt-3 font-display text-3xl sm:text-4xl tracking-tight">Send payment & confirm</h1>
+            <h1 class="mt-3 font-display text-3xl sm:text-4xl tracking-tight">Complete your payment</h1>
             <p class="mt-2 text-ink-500 dark:text-gray-300 max-w-2xl">
-                Pay the exact total below with PayPal to <strong class="text-ink-900 dark:text-white">{{ $paymentEmail }}</strong>, then upload a screenshot of the completed payment. We typically confirm within <strong>5 minutes</strong> during active hours.
+                Pay securely with Razorpay. After payment you’ll return here and we’ll add your books to <strong class="text-ink-900 dark:text-white">My Library</strong> automatically.
             </p>
         </div>
 
@@ -19,64 +19,39 @@
 
         <div class="grid lg:grid-cols-12 gap-8 items-start">
             <div class="lg:col-span-7 space-y-6">
-                {{-- PayPal-style summary card --}}
-                <div class="rounded-3xl border border-[#0070ba]/25 bg-gradient-to-br from-[#0070ba]/5 to-white dark:from-[#0070ba]/10 dark:to-white/5 p-6 sm:p-8 shadow-soft">
-                    <div class="flex items-center justify-between gap-4">
-                        <div>
-                            <div class="text-sm text-ink-500 dark:text-gray-300">Pay to</div>
-                            <div class="mt-1 font-mono text-lg font-semibold text-ink-900 dark:text-white break-all">{{ $paymentEmail }}</div>
-                        </div>
-                        <button type="button"
-                                data-copy-email="{{ $paymentEmail }}"
-                                class="js-copy-pay-email shrink-0 px-4 py-2 rounded-xl bg-[#0070ba] text-white text-sm font-medium hover:bg-[#005ea6] transition">
-                            Copy email
-                        </button>
-                    </div>
-
-                    <div class="mt-6 rounded-2xl bg-white/80 dark:bg-black/20 border border-black/5 dark:border-white/10 p-5">
-                        <div class="text-sm text-ink-500 dark:text-gray-300">Amount to send (exactly)</div>
-                        <div class="mt-2 text-4xl font-display font-semibold tracking-tight text-ink-900 dark:text-white">
-                            {{ strtoupper($order->currency) }} {{ number_format($order->total_cents / 100, 2) }}
-                        </div>
-                        <p class="mt-2 text-xs text-ink-500 dark:text-gray-400">
-                            Use “Friends & Family” or “Goods & Services” as you prefer—include the order number in the note if PayPal allows.
-                        </p>
-                    </div>
-
-                    <ol class="mt-6 space-y-3 text-sm text-ink-600 dark:text-gray-300 list-decimal list-inside">
-                        <li>Open the PayPal app or website and choose <strong>Send</strong>.</li>
-                        <li>Enter <strong>{{ $paymentEmail }}</strong> as the recipient.</li>
-                        <li>Enter the amount: <strong>{{ strtoupper($order->currency) }} {{ number_format($order->total_cents / 100, 2) }}</strong>.</li>
-                        <li>Complete the payment, then take a screenshot showing the completed transaction.</li>
-                        <li>Upload the screenshot below.</li>
-                    </ol>
-                </div>
-
                 @if($order->status === 'paid')
                     <div class="rounded-2xl border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/30 dark:border-emerald-800 px-4 py-3 text-sm text-emerald-900 dark:text-emerald-100">
                         Payment confirmed. Your books are in <a href="{{ route('library.index') }}" class="underline font-medium">My Library</a>.
                     </div>
-                @elseif($order->status === 'payment_submitted')
-                    <div class="rounded-2xl border border-amber-200 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800 px-4 py-3 text-sm text-amber-900 dark:text-amber-100">
-                        We received your payment proof and will confirm shortly—usually within 5 minutes. You can leave this page; we’ll email you at {{ $order->email }} if anything is unclear.
+                @elseif(!$razorpayConfigured)
+                    <div class="rounded-3xl border border-amber-200 bg-amber-50 dark:bg-amber-950/25 dark:border-amber-800 p-6 text-sm text-amber-950 dark:text-amber-100">
+                        <div class="font-display text-lg text-amber-950 dark:text-amber-50">Payments not configured</div>
+                        <p class="mt-2 opacity-90">Set <span class="font-mono text-xs">RAZORPAY_KEY</span> and <span class="font-mono text-xs">RAZORPAY_SECRET</span> in your environment and ensure <span class="font-mono text-xs">APP_URL</span> matches this site (used for the Razorpay return URL).</p>
                     </div>
-                    @if($order->payment_proof_path)
-                        <div class="text-xs text-ink-500 dark:text-gray-400">Proof uploaded {{ $order->payment_proof_submitted_at?->diffForHumans() ?? '' }}</div>
-                    @endif
                 @else
-                    <form method="POST" action="{{ route('checkout.payment-proof', $order) }}" enctype="multipart/form-data" class="rounded-3xl border border-black/5 dark:border-white/10 bg-white/70 dark:bg-white/5 p-6">
-                        @csrf
-                        <div class="font-display text-xl">Upload payment screenshot</div>
-                        <p class="mt-1 text-sm text-ink-500 dark:text-gray-300">PNG, JPG, or WebP · max 5 MB</p>
-                        <input type="file" name="payment_proof" required accept="image/jpeg,image/png,image/webp"
-                               class="mt-4 block w-full text-sm text-ink-500 file:mr-4 file:rounded-xl file:border-0 file:bg-ink-900 file:px-4 file:py-2 file:text-white file:hover:bg-black" />
-                        @error('payment_proof')
-                            <p class="mt-2 text-sm text-rose-600">{{ $message }}</p>
-                        @enderror
-                        <button type="submit" class="mt-5 w-full sm:w-auto px-6 py-3 rounded-2xl bg-ink-900 text-white hover:bg-black transition font-medium">
-                            Submit proof
-                        </button>
-                    </form>
+                    <div class="rounded-3xl border border-[#3395FF]/30 bg-gradient-to-br from-[#3395FF]/10 to-white dark:from-[#3395FF]/15 dark:to-white/5 p-6 sm:p-8 shadow-soft">
+                        <div class="font-display text-xl text-ink-900 dark:text-white">Pay with Razorpay</div>
+                        <p class="mt-2 text-sm text-ink-600 dark:text-gray-300">
+                            You’ll open Razorpay’s secure payment page. Use card, UPI, or other methods enabled on your Razorpay account.
+                        </p>
+
+                        <form method="POST" action="{{ route('checkout.razorpay.start', $order) }}" class="mt-6">
+                            @csrf
+                            <button type="submit" class="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-[#3395FF] text-white font-semibold hover:bg-[#2674CC] transition shadow-lg shadow-[#3395FF]/25">
+                                Pay {{ strtoupper($order->currency) }} {{ number_format($order->total_cents / 100, 2) }}
+                            </button>
+                        </form>
+
+                        <p class="mt-4 text-xs text-ink-500 dark:text-gray-400">
+                            If you already paid, use the button again to open the receipt page, or wait a moment and refresh after returning from Razorpay.
+                        </p>
+                    </div>
+                @endif
+
+                @if($order->status === 'payment_submitted' && $order->payment_proof_path)
+                    <div class="rounded-2xl border border-amber-200 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800 px-4 py-3 text-sm text-amber-900 dark:text-amber-100">
+                        We previously received a manual payment screenshot for this order. Razorpay payment will override once completed.
+                    </div>
                 @endif
             </div>
 
@@ -102,6 +77,11 @@
                         <div class="mt-2 text-xs text-ink-500 dark:text-gray-300">
                             Order #{{ $order->id }} · Status: <span class="font-medium">{{ $order->status }}</span>
                         </div>
+                        @if($order->razorpay_payment_link_id)
+                            <div class="mt-2 text-xs font-mono text-ink-500 dark:text-gray-400 break-all">
+                                Razorpay link: {{ $order->razorpay_payment_link_id }}
+                            </div>
+                        @endif
                     </div>
 
                     <div class="mt-6 flex flex-wrap gap-2">
@@ -112,20 +92,4 @@
             </aside>
         </div>
     </div>
-
-    <script>
-        (function () {
-            document.querySelectorAll('.js-copy-pay-email').forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    var email = btn.getAttribute('data-copy-email') || '';
-                    if (!email) return;
-                    navigator.clipboard.writeText(email).then(function () {
-                        var t = btn.textContent;
-                        btn.textContent = 'Copied!';
-                        setTimeout(function () { btn.textContent = t; }, 2000);
-                    });
-                });
-            });
-        })();
-    </script>
 </x-layouts.store>

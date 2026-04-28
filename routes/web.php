@@ -123,6 +123,8 @@ Route::middleware('auth')->group(function () {
     Route::match(['get', 'post'], '/checkout/cart', [CheckoutController::class, 'startFromCart'])->name('checkout.cart');
     Route::post('/checkout/{book:slug}', [CheckoutController::class, 'start'])->name('checkout.start'); // single-book
     Route::get('/checkout/pending/{order}', [CheckoutController::class, 'pending'])->name('checkout.pending');
+    Route::post('/checkout/pending/{order}/razorpay', [CheckoutController::class, 'razorpayStart'])->name('checkout.razorpay.start');
+    Route::get('/payment/razorpay/callback/{order}', [CheckoutController::class, 'razorpayCallback'])->name('checkout.razorpay.callback');
     Route::post('/checkout/pending/{order}/payment-proof', [CheckoutController::class, 'submitPaymentProof'])->name('checkout.payment-proof');
 });
 
