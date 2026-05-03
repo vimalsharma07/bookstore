@@ -25,7 +25,7 @@
         @if($razorpayConfigured)
             @if(! auth()->user()->phone)
                 <p class="mt-6 text-xs text-ink-600 dark:text-gray-300 rounded-xl border border-black/8 dark:border-white/10 bg-white/50 dark:bg-white/5 px-3 py-2">
-                    Add your mobile under <a href="{{ route('profile.edit') }}" class="underline font-medium">Profile</a> to reduce extra phone prompts on Razorpay (UPI / receipts). You are already signed in here.
+                    Add your mobile under <a href="{{ route('profile.edit') }}" class="underline font-medium">Profile</a> so we can pre-fill the correct <strong>+country</strong> number in Razorpay (e.g. +1 for USD, +91 for INR).
                 </p>
             @endif
             <form method="POST" action="{{ route('subscriptions.razorpay.start', $subscription) }}" class="mt-8">

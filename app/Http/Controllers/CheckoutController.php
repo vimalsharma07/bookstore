@@ -9,6 +9,7 @@ use App\Models\OrderItem;
 use App\Models\UserBookActivity;
 use App\Services\Cart;
 use App\Services\Currency;
+use App\Services\RazorpayOrderService;
 use App\Services\RazorpayPaymentLinkService;
 use App\Support\PublicFileUpload;
 use App\Support\RazorpayCustomerContact;
@@ -102,7 +103,7 @@ class CheckoutController extends Controller
         ]);
     }
 
-    public function razorpayStart(Request $request, Order $order, RazorpayPaymentLinkService $razorpay)
+    public function razorpayStart(Request $request, Order $order, RazorpayOrderService $orderApi, RazorpayPaymentLinkService $razorpay)
     {
         abort_unless($order->user_id === $request->user()->id, 403);
 
@@ -121,70 +122,44 @@ class CheckoutController extends Controller
         $currency = strtoupper((string) (config('razorpay.default_currency') ?: $order->currency));
         $amountSubunits = max(1, (int) $order->total_cents);
 
-        $appUrl = rtrim((string) config('app.url'), '/');
-        $callbackUrl = $appUrl.'/payment/razorpay/callback/'.$order->id;
-
         $user = $request->user();
-        $customerName = $user->name ?: 'Customer';
-        $customerEmail = $order->email ?: $user->email ?: 'noreply@example.com';
-        $customerContact = RazorpayCustomerContact::forPayment($user, $currency);
-
-        if ($order->razorpay_payment_link_id) {
-            try {
-                $existing = $razorpay->getPaymentLink($order->razorpay_payment_link_id);
-                $status = strtolower((string) ($existing['status'] ?? ''));
-                if ($status === 'paid') {
-                    return $this->finalizeRazorpayPaid($order);
-                }
-
-                $shortUrl = isset($existing['short_url']) && is_string($existing['short_url']) ? $existing['short_url'] : null;
-                if ($shortUrl && ! in_array($status, ['cancelled', 'expired'], true)) {
-                    return redirect()->away($shortUrl);
-                }
-            } catch (\Throwable) {
-                //
-            }
-        }
-
-        $body = [
-            'amount' => $amountSubunits,
-            'currency' => $currency,
-            'description' => 'Payment for order #'.$order->id,
-            'customer' => [
-                'name' => $customerName,
-                'email' => $customerEmail,
-                'contact' => $customerContact,
-            ],
-            'notify' => [
-                'sms' => false,
-                'email' => false,
-            ],
-            'reminder_enable' => false,
-            'callback_url' => $callbackUrl,
-            'callback_method' => 'get',
-            'reference_id' => (string) $order->id,
-            'notes' => [
-                'reference_id' => (string) $order->id,
-                'order_type' => 'book',
-                'source' => (string) config('razorpay.notes_source'),
-            ],
-        ];
 
         try {
-            $response = $razorpay->createPaymentLink($body);
-            $linkId = isset($response['id']) && is_string($response['id']) ? $response['id'] : null;
-            $shortUrl = isset($response['short_url']) && is_string($response['short_url']) ? $response['short_url'] : null;
-
-            if (! $linkId || ! $shortUrl) {
-                return redirect()->route('checkout.pending', $order)->with('status', 'Could not start payment. Please try again.');
-            }
-
-            $order->forceFill(['razorpay_payment_link_id' => $linkId])->save();
-
-            return redirect()->away($shortUrl);
+            $rOrder = $orderApi->createOrder(
+                $amountSubunits,
+                $currency,
+                'order_'.$order->id.'_'.time(),
+                [
+                    'bookqueue_order_id' => (string) $order->id,
+                    'order_type' => 'book',
+                    'source' => (string) config('razorpay.notes_source'),
+                ]
+            );
         } catch (\Throwable $e) {
             return redirect()->route('checkout.pending', $order)->with('status', $e->getMessage());
         }
+
+        $razorpayOrderId = isset($rOrder['id']) && is_string($rOrder['id']) ? $rOrder['id'] : null;
+        if (! $razorpayOrderId) {
+            return redirect()->route('checkout.pending', $order)->with('status', 'Could not start payment. Please try again.');
+        }
+
+        $order->forceFill(['razorpay_order_id' => $razorpayOrderId])->save();
+
+        return view('store.payments.razorpay-checkout', [
+            'title' => 'Pay order #'.$order->id,
+            'context' => 'order',
+            'order' => $order,
+            'subscription' => null,
+            'razorpayKey' => config('razorpay.key'),
+            'razorpayOrderId' => $razorpayOrderId,
+            'description' => 'Order #'.$order->id,
+            'prefillName' => $user->name ?: 'Customer',
+            'prefillEmail' => $order->email ?: $user->email ?: 'noreply@example.com',
+            'prefillContact' => RazorpayCustomerContact::prefillContact($user, $currency),
+            'verifyAction' => route('payment.razorpay.verify-order'),
+            'backUrl' => route('checkout.pending', $order),
+        ]);
     }
 
     public function razorpayCallback(Request $request, Order $order, RazorpayPaymentLinkService $razorpay)
@@ -196,7 +171,11 @@ class CheckoutController extends Controller
         }
 
         if (! $order->razorpay_payment_link_id) {
-            return redirect()->route('checkout.pending', $order)->with('status', 'No Razorpay payment link for this order. Click Pay with Razorpay again.');
+            if ($order->razorpay_order_id) {
+                return redirect()->route('checkout.pending', $order)->with('status', 'Complete payment in the Razorpay window, or click Pay with Razorpay again.');
+            }
+
+            return redirect()->route('checkout.pending', $order)->with('status', 'No payment session. Click Pay with Razorpay.');
         }
 
         if (! $razorpay->isConfigured()) {

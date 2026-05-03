@@ -4,10 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Book;
 use App\Models\ReadingSubscription;
+use App\Services\RazorpayOrderService;
 use App\Services\RazorpayPaymentLinkService;
 use App\Services\ReadingAccessService;
 use App\Support\RazorpayCustomerContact;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -94,7 +94,7 @@ class ReadingSubscriptionController extends Controller
         ]);
     }
 
-    public function razorpayStart(Request $request, ReadingSubscription $readingSubscription, RazorpayPaymentLinkService $razorpay)
+    public function razorpayStart(Request $request, ReadingSubscription $readingSubscription, RazorpayOrderService $orderApi, RazorpayPaymentLinkService $linkService)
     {
         abort_unless($readingSubscription->user_id === $request->user()->id, 403);
 
@@ -106,11 +106,55 @@ class ReadingSubscriptionController extends Controller
             return redirect()->route('subscriptions.index')->with('status', 'Invalid subscription state.');
         }
 
-        if (! $razorpay->isConfigured()) {
+        if (! $linkService->isConfigured()) {
             return redirect()->route('subscriptions.pending', $readingSubscription)->with('status', 'Razorpay is not configured.');
         }
 
-        return $this->startRazorpay($request, $readingSubscription, $razorpay);
+        $currency = strtoupper((string) (config('razorpay.default_currency') ?: $readingSubscription->currency));
+        $amountSubunits = max(1, (int) $readingSubscription->price_cents);
+
+        $user = $request->user();
+
+        $description = $readingSubscription->plan_key === 'custom'
+            ? 'Reading subscription ('.$readingSubscription->custom_days.' days)'
+            : 'Reading subscription ('.$readingSubscription->plan_key.')';
+
+        try {
+            $rOrder = $orderApi->createOrder(
+                $amountSubunits,
+                $currency,
+                'sub_'.$readingSubscription->id.'_'.time(),
+                [
+                    'reading_subscription_id' => (string) $readingSubscription->id,
+                    'order_type' => 'reading_subscription',
+                    'source' => (string) config('razorpay.notes_source'),
+                ]
+            );
+        } catch (\Throwable $e) {
+            return redirect()->route('subscriptions.pending', $readingSubscription)->with('status', $e->getMessage());
+        }
+
+        $razorpayOrderId = isset($rOrder['id']) && is_string($rOrder['id']) ? $rOrder['id'] : null;
+        if (! $razorpayOrderId) {
+            return redirect()->route('subscriptions.pending', $readingSubscription)->with('status', 'Could not start payment.');
+        }
+
+        $readingSubscription->forceFill(['razorpay_order_id' => $razorpayOrderId])->save();
+
+        return view('store.payments.razorpay-checkout', [
+            'title' => 'Pay subscription',
+            'context' => 'subscription',
+            'order' => null,
+            'subscription' => $readingSubscription,
+            'razorpayKey' => config('razorpay.key'),
+            'razorpayOrderId' => $razorpayOrderId,
+            'description' => $description,
+            'prefillName' => $user->name ?: 'Customer',
+            'prefillEmail' => $user->email ?: 'noreply@example.com',
+            'prefillContact' => RazorpayCustomerContact::prefillContact($user, $currency),
+            'verifyAction' => route('payment.razorpay.verify-subscription'),
+            'backUrl' => route('subscriptions.pending', $readingSubscription),
+        ]);
     }
 
     public function razorpayCallback(Request $request, ReadingSubscription $readingSubscription, RazorpayPaymentLinkService $razorpay)
@@ -122,7 +166,11 @@ class ReadingSubscriptionController extends Controller
         }
 
         if (! $readingSubscription->razorpay_payment_link_id) {
-            return redirect()->route('subscriptions.pending', $readingSubscription)->with('status', 'No payment session. Open Pay again.');
+            if ($readingSubscription->razorpay_order_id) {
+                return redirect()->route('subscriptions.pending', $readingSubscription)->with('status', 'Complete payment in the Razorpay window, or click Pay with Razorpay again.');
+            }
+
+            return redirect()->route('subscriptions.pending', $readingSubscription)->with('status', 'No payment session. Click Pay with Razorpay.');
         }
 
         if (! $razorpay->isConfigured()) {
@@ -134,7 +182,7 @@ class ReadingSubscriptionController extends Controller
             $status = strtolower((string) ($link['status'] ?? ''));
 
             if ($status === 'paid') {
-                $this->activateSubscription($readingSubscription);
+                $readingSubscription->markPaidAndActivate();
 
                 return redirect()->route('subscriptions.index')->with('status', 'Subscription active. Enjoy reading!');
             }
@@ -178,112 +226,5 @@ class ReadingSubscriptionController extends Controller
 
         return back()->with('status', 'Book removed from your subscription list.');
     }
-
-    private function activateSubscription(ReadingSubscription $subscription): void
-    {
-        $subscription->forceFill([
-            'status' => 'active',
-            'paid_at' => now(),
-            'starts_at' => now(),
-            'ends_at' => $this->computeEndsAt($subscription),
-        ])->save();
-    }
-
-    private function computeEndsAt(ReadingSubscription $subscription): Carbon
-    {
-        if ($subscription->plan_key === 'custom' && $subscription->custom_days) {
-            return now()->addDays($subscription->custom_days);
-        }
-
-        $plan = config('reading_subscriptions.plans.'.$subscription->plan_key);
-        $period = $plan['period'] ?? [];
-
-        if (isset($period['months'])) {
-            return now()->addMonths((int) $period['months']);
-        }
-
-        if (isset($period['years'])) {
-            return now()->addYears((int) $period['years']);
-        }
-
-        return now()->addMonth();
-    }
-
-    private function startRazorpay(Request $request, ReadingSubscription $subscription, RazorpayPaymentLinkService $razorpay)
-    {
-        $currency = strtoupper((string) (config('razorpay.default_currency') ?: $subscription->currency));
-        $amountSubunits = max(1, (int) $subscription->price_cents);
-
-        $appUrl = rtrim((string) config('app.url'), '/');
-        $callbackUrl = $appUrl.'/payment/razorpay/callback/subscription/'.$subscription->id;
-
-        $user = $request->user();
-        $customerName = $user->name ?: 'Customer';
-        $customerEmail = $user->email ?: 'noreply@example.com';
-        $customerContact = RazorpayCustomerContact::forPayment($user, $currency);
-
-        if ($subscription->razorpay_payment_link_id) {
-            try {
-                $existing = $razorpay->getPaymentLink($subscription->razorpay_payment_link_id);
-                $status = strtolower((string) ($existing['status'] ?? ''));
-                if ($status === 'paid') {
-                    $this->activateSubscription($subscription);
-
-                    return redirect()->route('subscriptions.index')->with('status', 'Subscription active.');
-                }
-
-                $shortUrl = isset($existing['short_url']) && is_string($existing['short_url']) ? $existing['short_url'] : null;
-                if ($shortUrl && ! in_array($status, ['cancelled', 'expired'], true)) {
-                    return redirect()->away($shortUrl);
-                }
-            } catch (\Throwable) {
-                //
-            }
-        }
-
-        $label = $subscription->plan_key === 'custom'
-            ? 'Reading subscription ('.$subscription->custom_days.' days, up to '.$subscription->max_books.' books)'
-            : 'Reading subscription ('.$subscription->plan_key.')';
-
-        $body = [
-            'amount' => $amountSubunits,
-            'currency' => $currency,
-            'description' => $label,
-            'customer' => [
-                'name' => $customerName,
-                'email' => $customerEmail,
-                'contact' => $customerContact,
-            ],
-            'notify' => [
-                'sms' => false,
-                'email' => false,
-            ],
-            'reminder_enable' => false,
-            'callback_url' => $callbackUrl,
-            'callback_method' => 'get',
-            'reference_id' => 'sub_'.$subscription->id,
-            'notes' => [
-                'reference_id' => 'sub_'.$subscription->id,
-                'order_type' => 'reading_subscription',
-                'source' => (string) config('razorpay.notes_source'),
-            ],
-        ];
-
-        try {
-            $response = $razorpay->createPaymentLink($body);
-            $linkId = isset($response['id']) && is_string($response['id']) ? $response['id'] : null;
-            $shortUrl = isset($response['short_url']) && is_string($response['short_url']) ? $response['short_url'] : null;
-
-            if (! $linkId || ! $shortUrl) {
-                return redirect()->route('subscriptions.index')->with('status', 'Could not start payment.');
-            }
-
-            $subscription->forceFill(['razorpay_payment_link_id' => $linkId])->save();
-
-            return redirect()->away($shortUrl);
-        } catch (\Throwable $e) {
-            return redirect()->route('subscriptions.index')->with('status', $e->getMessage());
-        }
-    }
-
 }
+

@@ -16,6 +16,7 @@ class Order extends Model
         'stripe_session_id',
         'stripe_payment_intent_id',
         'razorpay_payment_link_id',
+        'razorpay_order_id',
         'email',
         'billing_details',
         'payment_proof_path',

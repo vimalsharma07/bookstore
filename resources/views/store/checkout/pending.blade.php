@@ -32,7 +32,7 @@
                     <div class="rounded-3xl border border-[#3395FF]/30 bg-gradient-to-br from-[#3395FF]/10 to-white dark:from-[#3395FF]/15 dark:to-white/5 p-6 sm:p-8 shadow-soft">
                         <div class="font-display text-xl text-ink-900 dark:text-white">Pay with Razorpay</div>
                         <p class="mt-2 text-sm text-ink-600 dark:text-gray-300">
-                            You’ll open Razorpay’s secure payment page. Use card, UPI, or other methods enabled on your Razorpay account.
+                            Razorpay opens in a secure overlay on this site with your name, email, and phone pre-filled—then you choose card, UPI, or other methods your Razorpay account supports.
                         </p>
 
                         <form method="POST" action="{{ route('checkout.razorpay.start', $order) }}" class="mt-6">
@@ -47,7 +47,7 @@
                         </p>
                         @if(! auth()->user()->phone)
                             <p class="mt-3 text-xs text-ink-600 dark:text-gray-300 rounded-xl border border-black/8 dark:border-white/10 bg-white/50 dark:bg-white/5 px-3 py-2">
-                                <strong class="text-ink-900 dark:text-white">Tip:</strong> Add your mobile in <a href="{{ route('profile.edit') }}" class="underline font-medium">Profile</a> so Razorpay can pre-fill your number—otherwise their page may ask you to enter a phone for UPI or receipts (you stay logged in on BookQueue; this is only on Razorpay’s payment screen).
+                                <strong class="text-ink-900 dark:text-white">Tip:</strong> Add your mobile in <a href="{{ route('profile.edit') }}" class="underline font-medium">Profile</a> so we can pre-fill the correct country code (e.g. +1 for USD or +91 for INR) in Razorpay.
                             </p>
                         @endif
                     </div>

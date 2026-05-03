@@ -5,55 +5,61 @@ namespace App\Support;
 use App\Models\User;
 
 /**
- * Razorpay payment links require a customer.contact value.
- * Using a random number causes Razorpay to ask the payer to verify or enter a real mobile.
- * Prefer the user's saved phone from their profile so the hosted page can pre-fill correctly.
+ * Razorpay Checkout.js expects contact as E.164 (+country + national digits).
+ * Payment Links API no longer auto-fills the hosted page (Razorpay security policy);
+ * we use Orders API + Checkout with prefill instead.
  */
 final class RazorpayCustomerContact
 {
-    public static function forPayment(?User $user, string $currency): string
+    /**
+     * For Checkout.js `prefill.contact` — E.164 format per Razorpay docs.
+     */
+    public static function prefillContact(?User $user, string $currency): string
     {
         $currency = strtoupper($currency);
+        $digits = preg_replace('/\D+/', '', (string) ($user?->phone ?? ''));
 
-        if ($user !== null) {
-            $digits = preg_replace('/\D+/', '', (string) ($user->phone ?? ''));
+        if ($digits !== '') {
+            if (strlen($digits) === 12 && str_starts_with($digits, '91')) {
+                return '+'.$digits;
+            }
 
-            if ($digits !== '') {
+            if (strlen($digits) === 11 && str_starts_with($digits, '1')) {
+                return '+'.$digits;
+            }
+
+            if (strlen($digits) === 10) {
                 if ($currency === 'INR') {
-                    if (strlen($digits) > 10 && str_starts_with($digits, '91')) {
-                        $digits = substr($digits, -10);
-                    }
-
-                    if (strlen($digits) === 10) {
-                        return $digits;
-                    }
-                } elseif (strlen($digits) >= 10 && strlen($digits) <= 15) {
-                    return $digits;
+                    return '+91'.$digits;
                 }
+
+                return '+1'.$digits;
+            }
+
+            if (strlen($digits) >= 11 && strlen($digits) <= 15) {
+                return '+'.$digits;
             }
         }
 
-        return self::randomPlaceholder($currency);
+        return self::placeholderE164($currency);
     }
 
-    private static function randomPlaceholder(string $currency): string
+    private static function placeholderE164(string $currency): string
     {
         if ($currency === 'INR') {
-            $first = (string) random_int(6, 9);
-            $rest = '';
-            for ($i = 0; $i < 9; $i++) {
-                $rest .= (string) random_int(0, 9);
-            }
-
-            return $first.$rest;
+            return '+91'.self::randomTenDigits();
         }
 
-        $first = (string) random_int(2, 9);
-        $rest = '';
-        for ($i = 0; $i < 9; $i++) {
-            $rest .= (string) random_int(0, 9);
+        return '+1'.self::randomTenDigits();
+    }
+
+    private static function randomTenDigits(): string
+    {
+        $s = '';
+        for ($i = 0; $i < 10; $i++) {
+            $s .= (string) random_int(0, 9);
         }
 
-        return $first.$rest;
+        return $s;
     }
 }
