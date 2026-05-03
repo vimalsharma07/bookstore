@@ -11,6 +11,7 @@
 
             <div class="hidden md:flex items-center gap-2">
                 <a href="{{ route('books.index') }}" class="px-3 py-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition text-sm">Browse</a>
+                <a href="{{ route('subscriptions.index') }}" class="px-3 py-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition text-sm">Subscriptions</a>
                 @auth
                     <a href="{{ route('library.index') }}" class="px-3 py-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition text-sm">My Library</a>
                 @endauth
@@ -84,6 +85,7 @@
                     </select>
                 </form>
                 <a href="{{ route('books.index') }}" class="px-3 py-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition text-sm">Browse</a>
+                <a href="{{ route('subscriptions.index') }}" class="px-3 py-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition text-sm">Subscriptions</a>
                 <a href="{{ route('cart.show') }}" class="px-3 py-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition text-sm">Cart</a>
                 @auth
                     <a href="{{ route('library.index') }}" class="px-3 py-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition text-sm">My Library</a>

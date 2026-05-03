@@ -22,6 +22,30 @@
                                 <a href="{{ route('library.index') }}" class="w-full inline-flex justify-center px-4 py-3 rounded-2xl border border-black/10 dark:border-white/15 bg-white/60 dark:bg-white/5 hover:bg-white/90 dark:hover:bg-white/10 transition">
                                     View in My Library
                                 </a>
+                            @elseif($readingAccessGranted)
+                                <a href="{{ route('library.download', $book) }}" class="w-full inline-flex justify-center px-4 py-3 rounded-2xl bg-ink-900 text-white hover:bg-black transition">
+                                    Download
+                                </a>
+                                @if($readingUnlimited)
+                                    <p class="text-xs text-ink-500 dark:text-gray-400 text-center leading-relaxed">
+                                        Included in your <strong class="text-ink-800 dark:text-gray-200">subscription</strong>
+                                        until {{ $readingUnlimited->ends_at->format('M j, Y') }} · <a href="{{ route('subscriptions.index') }}" class="underline">Plans</a>
+                                    </p>
+                                @elseif($readingCustom && $onCustomReadingList)
+                                    <p class="text-xs text-ink-500 dark:text-gray-400 text-center leading-relaxed">
+                                        Subscription reading {{ $readingCustom->books->count() }}/{{ $readingCustom->max_books }} books · ends {{ $readingCustom->ends_at->format('M j, Y') }}
+                                    </p>
+                                    <form method="POST" action="{{ route('subscriptions.books.remove', $book) }}" class="w-full">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="w-full inline-flex justify-center px-4 py-2.5 rounded-2xl border border-black/10 dark:border-white/15 text-sm text-ink-700 dark:text-gray-200 hover:bg-black/5 dark:hover:bg-white/10 transition">
+                                            Remove from subscription list
+                                        </button>
+                                    </form>
+                                @endif
+                                <a href="{{ route('library.index') }}" class="w-full inline-flex justify-center px-4 py-3 rounded-2xl border border-black/10 dark:border-white/15 bg-white/60 dark:bg-white/5 hover:bg-white/90 dark:hover:bg-white/10 transition">
+                                    My Library
+                                </a>
                             @else
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     <form method="POST" action="{{ route('cart.add', $book) }}">
@@ -42,6 +66,15 @@
                                         Buy now (single)
                                     </button>
                                 </form>
+
+                                @if($readingCustom && ! $onCustomReadingList && $readingCustom->books->count() < $readingCustom->max_books)
+                                    <form method="POST" action="{{ route('subscriptions.books.add', $book) }}" class="w-full">
+                                        @csrf
+                                        <button type="submit" class="w-full inline-flex justify-center px-4 py-3 rounded-2xl border border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-900 dark:text-emerald-100 text-sm font-medium hover:bg-emerald-100/80 dark:hover:bg-emerald-900/40 transition">
+                                            Add to subscription reading ({{ $readingCustom->books->count() }}/{{ $readingCustom->max_books }})
+                                        </button>
+                                    </form>
+                                @endif
                             @endif
 
                             <form method="POST" action="{{ route('books.wishlist', $book) }}">

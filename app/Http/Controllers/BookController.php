@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Book;
 use App\Models\Review;
 use App\Services\Currency;
+use App\Services\ReadingAccessService;
 use App\Models\UserBookActivity;
 use App\Models\WishlistItem;
 use Illuminate\Http\Request;
@@ -60,7 +61,7 @@ class BookController extends Controller
         ]);
     }
 
-    public function show(Request $request, Book $book)
+    public function show(Request $request, Book $book, ReadingAccessService $readingAccess)
     {
         abort_unless($book->is_active, 404);
 
@@ -75,9 +76,18 @@ class BookController extends Controller
         $user = Auth::user();
         $inWishlist = false;
         $owned = false;
+        $readingAccessGranted = false;
+        $readingUnlimited = null;
+        $readingCustom = null;
+        $onCustomReadingList = false;
+
         if ($user) {
             $inWishlist = WishlistItem::query()->where('user_id', $user->id)->where('book_id', $book->id)->exists();
             $owned = \App\Models\LibraryItem::query()->where('user_id', $user->id)->where('book_id', $book->id)->exists();
+            $readingAccessGranted = $readingAccess->canAccessBook($user, $book);
+            $readingUnlimited = $readingAccess->activeUnlimitedSubscription($user);
+            $readingCustom = $readingAccess->activeCustomSubscription($user);
+            $onCustomReadingList = (bool) ($readingCustom && $readingCustom->books->contains('id', $book->id));
 
             UserBookActivity::create([
                 'user_id' => $user->id,
@@ -102,6 +112,10 @@ class BookController extends Controller
             'reviews' => $reviews,
             'inWishlist' => $inWishlist,
             'owned' => $owned,
+            'readingAccessGranted' => $readingAccessGranted,
+            'readingUnlimited' => $readingUnlimited,
+            'readingCustom' => $readingCustom,
+            'onCustomReadingList' => $onCustomReadingList,
             'recommended' => $recommended,
         ]);
     }

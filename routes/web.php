@@ -12,6 +12,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\LibraryController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReadingSubscriptionController;
 use App\Http\Controllers\StorefrontController;
 use App\Http\Middleware\VerifyCsrfToken;
 use App\Models\WebhookLog;
@@ -90,6 +91,8 @@ Route::post('/payment/razorpay', function (Request $request) {
     }
 })->withoutMiddleware([VerifyCsrfToken::class]);
 
+Route::get('/subscriptions', [ReadingSubscriptionController::class, 'index'])->name('subscriptions.index');
+
 Route::get('/books', [BookController::class, 'index'])->name('books.index');
 Route::get('/books/{book:slug}', [BookController::class, 'show'])->name('books.show');
 Route::get('/books/{book:slug}/preview', [BookController::class, 'preview'])->name('books.preview');
@@ -126,6 +129,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/checkout/pending/{order}/razorpay', [CheckoutController::class, 'razorpayStart'])->name('checkout.razorpay.start');
     Route::get('/payment/razorpay/callback/{order}', [CheckoutController::class, 'razorpayCallback'])->name('checkout.razorpay.callback');
     Route::post('/checkout/pending/{order}/payment-proof', [CheckoutController::class, 'submitPaymentProof'])->name('checkout.payment-proof');
+
+    Route::post('/subscriptions', [ReadingSubscriptionController::class, 'store'])->name('subscriptions.store');
+    Route::get('/subscriptions/pending/{reading_subscription}', [ReadingSubscriptionController::class, 'pending'])->name('subscriptions.pending');
+    Route::post('/subscriptions/{reading_subscription}/razorpay', [ReadingSubscriptionController::class, 'razorpayStart'])->name('subscriptions.razorpay.start');
+    Route::get('/payment/razorpay/callback/subscription/{reading_subscription}', [ReadingSubscriptionController::class, 'razorpayCallback'])->name('subscriptions.razorpay.callback');
+    Route::post('/subscription/reading/{book:slug}', [ReadingSubscriptionController::class, 'addBook'])->name('subscriptions.books.add');
+    Route::delete('/subscription/reading/{book:slug}', [ReadingSubscriptionController::class, 'removeBook'])->name('subscriptions.books.remove');
 });
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
