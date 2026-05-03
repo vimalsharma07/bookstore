@@ -11,6 +11,7 @@ use App\Services\Cart;
 use App\Services\Currency;
 use App\Services\RazorpayPaymentLinkService;
 use App\Support\PublicFileUpload;
+use App\Support\RazorpayCustomerContact;
 use Illuminate\Http\Request;
 
 class CheckoutController extends Controller
@@ -126,7 +127,7 @@ class CheckoutController extends Controller
         $user = $request->user();
         $customerName = $user->name ?: 'Customer';
         $customerEmail = $order->email ?: $user->email ?: 'noreply@example.com';
-        $customerContact = $this->randomContactDigits($currency);
+        $customerContact = RazorpayCustomerContact::forPayment($user, $currency);
 
         if ($order->razorpay_payment_link_id) {
             try {
@@ -295,26 +296,4 @@ class CheckoutController extends Controller
         return redirect()->route('library.index')->with('status', 'Payment successful. Your books are ready in My Library.');
     }
 
-    private function randomContactDigits(string $currency): string
-    {
-        $currency = strtoupper($currency);
-
-        if ($currency === 'INR') {
-            $first = (string) random_int(6, 9);
-            $rest = '';
-            for ($i = 0; $i < 9; $i++) {
-                $rest .= (string) random_int(0, 9);
-            }
-
-            return $first.$rest;
-        }
-
-        $first = (string) random_int(2, 9);
-        $rest = '';
-        for ($i = 0; $i < 9; $i++) {
-            $rest .= (string) random_int(0, 9);
-        }
-
-        return $first.$rest;
-    }
 }

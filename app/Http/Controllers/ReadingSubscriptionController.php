@@ -6,6 +6,7 @@ use App\Models\Book;
 use App\Models\ReadingSubscription;
 use App\Services\RazorpayPaymentLinkService;
 use App\Services\ReadingAccessService;
+use App\Support\RazorpayCustomerContact;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -219,7 +220,7 @@ class ReadingSubscriptionController extends Controller
         $user = $request->user();
         $customerName = $user->name ?: 'Customer';
         $customerEmail = $user->email ?: 'noreply@example.com';
-        $customerContact = $this->randomContactDigits($currency);
+        $customerContact = RazorpayCustomerContact::forPayment($user, $currency);
 
         if ($subscription->razorpay_payment_link_id) {
             try {
@@ -285,26 +286,4 @@ class ReadingSubscriptionController extends Controller
         }
     }
 
-    private function randomContactDigits(string $currency): string
-    {
-        $currency = strtoupper($currency);
-
-        if ($currency === 'INR') {
-            $first = (string) random_int(6, 9);
-            $rest = '';
-            for ($i = 0; $i < 9; $i++) {
-                $rest .= (string) random_int(0, 9);
-            }
-
-            return $first.$rest;
-        }
-
-        $first = (string) random_int(2, 9);
-        $rest = '';
-        for ($i = 0; $i < 9; $i++) {
-            $rest .= (string) random_int(0, 9);
-        }
-
-        return $first.$rest;
-    }
 }

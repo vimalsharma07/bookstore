@@ -24,6 +24,13 @@
         </div>
 
         <div>
+            <x-input-label for="phone" :value="__('Mobile (for payments)')" />
+            <x-text-input id="phone" name="phone" type="tel" class="mt-1 block w-full" :value="old('phone', $user->phone)" autocomplete="tel" placeholder="+91… or local number" />
+            <x-input-error class="mt-2" :messages="$errors->get('phone')" />
+            <p class="mt-1 text-xs text-gray-500">{{ __('Used to pre-fill Razorpay so you are not asked to enter your number again at checkout.') }}</p>
+        </div>
+
+        <div>
             <x-input-label for="email" :value="__('Email')" />
             <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" :value="old('email', $user->email)" required autocomplete="username" />
             <x-input-error class="mt-2" :messages="$errors->get('email')" />

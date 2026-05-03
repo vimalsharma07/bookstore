@@ -45,6 +45,11 @@
                         <p class="mt-4 text-xs text-ink-500 dark:text-gray-400">
                             If you already paid, use the button again to open the receipt page, or wait a moment and refresh after returning from Razorpay.
                         </p>
+                        @if(! auth()->user()->phone)
+                            <p class="mt-3 text-xs text-ink-600 dark:text-gray-300 rounded-xl border border-black/8 dark:border-white/10 bg-white/50 dark:bg-white/5 px-3 py-2">
+                                <strong class="text-ink-900 dark:text-white">Tip:</strong> Add your mobile in <a href="{{ route('profile.edit') }}" class="underline font-medium">Profile</a> so Razorpay can pre-fill your number—otherwise their page may ask you to enter a phone for UPI or receipts (you stay logged in on BookQueue; this is only on Razorpay’s payment screen).
+                            </p>
+                        @endif
                     </div>
                 @endif
 
